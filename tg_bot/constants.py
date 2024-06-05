@@ -12,11 +12,18 @@ MANAGER_CHAT_ID = os.getenv("MANAGER_CHAT_ID")
 # ENDPONT_CREATE_USER = "https://webhook.site/d08effda-18c1-4e76-be8e-990b27c72eca" # noqa
 # ENDPONT_CREATE_APPLICATION = "https://webhook.site/d08effda-18c1-4e76-be8e-990b27c72eca" # noqa
 # ENDPONT_GET_APPLICATION_LIST = "https://webhook.site/d08effda-18c1-4e76-be8e-990b27c72eca" # noqa
-ENDPONT_CREATE_USER = "http://backend:8000/tguser/"
-ENDPONT_CREATE_APPLICATION = "http://backend:8000/application/"
-ENDPONT_GET_APPLICATION_LIST = "http://backend:8000/application/my/"
-ENDPONT_GET_COMPANY_LIST = "http://backend:8000/company/my/"
-ENDPONT_PATCH_COMPANY = "http://backend:8000/company/"
+# ENDPONT_CREATE_USER = "http://backend:8000/api/v1/tg_users/"
+# ENDPONT_CREATE_APPLICATION = "http://backend:8000/application/"
+# ENDPONT_GET_APPLICATION_LIST = "http://backend:8000/application/my/"
+# ENDPONT_GET_COMPANY_LIST = "http://backend:8000/company/my/"
+# ENDPONT_PATCH_COMPANY = "http://backend:8000/company/"
+ENDPONT_CREATE_USER = "http://backend:8000/api/v1/tg_users/"
+ENDPONT_CREATE_APPLICATION = "http://backend:8000/api/v1/applications/"
+ENDPONT_GET_APPLICATION_LIST = "http://backend:8000/api/v1/applications/"
+
+ENDPONT_GET_COMPANY_LIST = "http://backend:8000/api/v1/companies_payer/"
+ENDPONT_PATCH_COMPANY = "http://backend:8000/api/v1/companies_payer/"
+
 ENDPONT_GET_COMPANY_NAME = "http://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party" # noqa
 DADATA_API_KEY = "c132632530b566d1a154c8379ce78e6d6b1c9713"
 
