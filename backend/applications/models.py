@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class TimestampMixin(models.Model):
@@ -89,9 +90,10 @@ class Applications(TimestampMixin, models.Model):
         verbose_name="Автор заявки",
     )
     cost = models.IntegerField(
-        verbose_name="Сумма заявки"
+        verbose_name="Сумма заявки",
+        validators=[MinValueValidator(1), MaxValueValidator(10000000)]
     )
-    target_date = models.DateTimeField(
+    target_date = models.DateField(
         verbose_name="Дата исполнения заявки"
     )
     inn_payer = models.ForeignKey(
