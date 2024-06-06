@@ -38,13 +38,16 @@ class CompaniesRecipientSerializer(serializers.ModelSerializer):
 
 
 class ApplicationsSerializer(serializers.ModelSerializer):
-    tg_user_id = serializers.IntegerField()
+    tg_user_id = serializers.IntegerField(write_only=True)
     target_date = serializers.DateField(
         format="%d.%m.%y",
         input_formats=['%d.%m.%y', 'iso-8601']
     )
-    inn_payer = serializers.IntegerField()
-    inn_recipient = serializers.IntegerField()
+    inn_payer = serializers.IntegerField(write_only=True)
+    inn_recipient = serializers.IntegerField(write_only=True)
+    tg_user = serializers.SerializerMethodField()
+    payer = serializers.SerializerMethodField()
+    recipient = serializers.SerializerMethodField()
 
     class Meta:
         model = Applications
@@ -55,8 +58,20 @@ class ApplicationsSerializer(serializers.ModelSerializer):
             "target_date",
             "inn_payer",
             "inn_recipient",
+            "tg_user",
+            "payer",
+            "recipient",
         )
         read_only_fields = ('id',)
+
+    def get_tg_user(self, obj):
+        return obj.tg_user.tg_user_id
+
+    def get_payer(self, obj):
+        return obj.inn_payer.company_inn
+
+    def get_recipient(self, obj):
+        return obj.inn_recipient.company_inn
 
     def create(self, validated_data):
         tg_user_id = validated_data.pop('tg_user_id')
