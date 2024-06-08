@@ -9,15 +9,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "")
 # SECRET_KEY = "django-insecure-zybf797((ht9!l8y9col2qspk6uw@q8(jan*dqu+y863c$d4#4"
 
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-# DEBUG = True
+# DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.20', 'localhost', '127.0.0.1', '[::1]']
+ALLOWED_HOSTS = ["backend", "192.168.0.20", "localhost", "127.0.0.1", "[::1]"]
 
-CSRF_TRUSTED_ORIGINS = ['http://192.168.0.20:8000', 'http://*', 'https://*']
+CSRF_TRUSTED_ORIGINS = ["http://192.168.0.20:8000", "http://backend", "http://*", "https://*"]
 
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = "users.CustomUser"
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -28,8 +28,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "applications",
     "users",
-    'rest_framework',
-    'drf_yasg',
+    "rest_framework",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
@@ -72,13 +72,13 @@ DATABASES = {
 
 
 # DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('POSTGRES_DB', ''),
-#         'USER': os.getenv('POSTGRES_USER', ''),
-#         'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-#         'HOST': os.getenv('DB_HOST', ''),
-#         'PORT': os.getenv('DB_PORT', 5432)
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.getenv("POSTGRES_DB", ""),
+#         "USER": os.getenv("POSTGRES_USER", ""),
+#         "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+#         "HOST": os.getenv("DB_HOST", ""),
+#         "PORT": os.getenv("DB_PORT", 5432)
 #     }
 # }
 
@@ -97,10 +97,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.0/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "UTC"
@@ -109,26 +105,20 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
-
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static/"
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ]
 }
 
