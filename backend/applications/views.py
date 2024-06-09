@@ -7,6 +7,7 @@ from applications.serializers import (
     CompaniesPayerSerializer,
     CompaniesRecipientSerializer,
     ApplicationsSerializer,
+    ApplicationsPostUpdateSerializer,
 )
 from applications.models import (
     Applications,
@@ -56,3 +57,8 @@ class ApplicationsViewSet(viewsets.ModelViewSet):
     queryset = Applications.objects.all().order_by("created_at")
     serializer_class = ApplicationsSerializer
     authentication_classes = [BasicAuthentication]
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return ApplicationsSerializer
+        return ApplicationsPostUpdateSerializer

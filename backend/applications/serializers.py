@@ -38,16 +38,14 @@ class CompaniesRecipientSerializer(serializers.ModelSerializer):
 
 
 class ApplicationsSerializer(serializers.ModelSerializer):
-    tg_user_id = serializers.IntegerField(write_only=True)
+
+    tg_user_id = serializers.SerializerMethodField()
+    inn_payer = serializers.SerializerMethodField()
+    inn_recipient = serializers.SerializerMethodField()
     target_date = serializers.DateField(
         format="%d.%m.%y",
         input_formats=['%d.%m.%y', 'iso-8601']
     )
-    inn_payer = serializers.IntegerField(write_only=True)
-    inn_recipient = serializers.IntegerField(write_only=True)
-    tg_user = serializers.SerializerMethodField()
-    payer = serializers.SerializerMethodField()
-    recipient = serializers.SerializerMethodField()
 
     class Meta:
         model = Applications
@@ -58,19 +56,56 @@ class ApplicationsSerializer(serializers.ModelSerializer):
             "target_date",
             "inn_payer",
             "inn_recipient",
-            "tg_user",
-            "payer",
-            "recipient",
         )
         read_only_fields = ('id',)
 
-    def get_tg_user(self, obj):
+    def get_tg_user_id(self, obj):
         return obj.tg_user.tg_user_id
 
-    def get_payer(self, obj):
+    def get_inn_payer(self, obj):
         return obj.inn_payer.company_inn
 
-    def get_recipient(self, obj):
+    def get_inn_recipient(self, obj):
+        return obj.inn_recipient.company_inn
+
+
+class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
+
+    tg_user_id = serializers.IntegerField(write_only=True)
+    target_date = serializers.DateField(
+        format="%d.%m.%y",
+        input_formats=['%d.%m.%y', 'iso-8601']
+    )
+    inn_payer = serializers.IntegerField(write_only=True)
+    inn_recipient = serializers.IntegerField(write_only=True)
+
+    # поля для response
+    tg_user_id_display = serializers.SerializerMethodField()
+    inn_payer_display = serializers.SerializerMethodField()
+    inn_recipient_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Applications
+        fields = (
+            "id",
+            "tg_user_id",
+            "cost",
+            "target_date",
+            "inn_payer",
+            "inn_recipient",
+            "tg_user_id_display",
+            "inn_payer_display",
+            "inn_recipient_display",
+        )
+        read_only_fields = ('id',)
+
+    def get_tg_user_id_display(self, obj):
+        return obj.tg_user.tg_user_id
+
+    def get_inn_payer_display(self, obj):
+        return obj.inn_payer.company_inn
+
+    def get_inn_recipient_display(self, obj):
         return obj.inn_recipient.company_inn
 
     def create(self, validated_data):
@@ -78,7 +113,9 @@ class ApplicationsSerializer(serializers.ModelSerializer):
         try:
             tg_user = TelegamUsers.objects.get(tg_user_id=tg_user_id)
         except TelegamUsers.DoesNotExist:
-            raise serializers.ValidationError("Нет юзера с таким id.")
+            raise serializers.ValidationError(
+                "Нет юзера с таким id."
+            )
 
         inn_payer = validated_data.pop('inn_payer')
         try:
@@ -104,3 +141,45 @@ class ApplicationsSerializer(serializers.ModelSerializer):
             inn_recipient=inn_recipient,
             **validated_data
         )
+
+    def update(self, instance, validated_data):
+        tg_user_id = validated_data.pop('tg_user_id', None)
+        inn_payer_data = validated_data.pop('inn_payer', None)
+        inn_recipient_data = validated_data.pop('inn_recipient', None)
+
+        if tg_user_id is not None:
+            try:
+                tg_user = TelegamUsers.objects.get(tg_user_id=tg_user_id)
+                instance.tg_user = tg_user
+            except TelegamUsers.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Нет юзера с таким id."
+                )
+
+        if inn_payer_data is not None:
+            try:
+                inn_payer = CompaniesPayer.objects.get(
+                    company_inn=inn_payer_data
+                )
+                instance.inn_payer = inn_payer
+            except CompaniesPayer.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Нет компании плательщика с таким ИНН."
+                )
+
+        if inn_recipient_data is not None:
+            try:
+                inn_recipient = CompaniesRecipient.objects.get(
+                    company_inn=inn_recipient_data
+                )
+                instance.inn_recipient = inn_recipient
+            except CompaniesRecipient.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Нет компании получателя с таким ИНН."
+                )
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
