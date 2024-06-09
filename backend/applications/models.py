@@ -50,9 +50,9 @@ class CompaniesPayer(TimestampMixin, models.Model):
         default=None,
         null=True
     )
-    company_inn = models.CharField(
+    company_inn = models.IntegerField(
         verbose_name="ИНН плательщика 10 цифр",
-        max_length=10
+        unique=True
     )
 
     class Meta:
@@ -70,9 +70,9 @@ class CompaniesRecipient(TimestampMixin, models.Model):
         default=None,
         null=True
     )
-    company_inn = models.CharField(
+    company_inn = models.IntegerField(
         verbose_name="ИНН получателя 12 цифр",
-        max_length=12
+        unique=True
     )
 
     class Meta:
