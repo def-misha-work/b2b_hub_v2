@@ -76,8 +76,8 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
         format="%d.%m.%y",
         input_formats=['%d.%m.%y', 'iso-8601']
     )
-    inn_payer = serializers.IntegerField(write_only=True)
-    inn_recipient = serializers.IntegerField(write_only=True)
+    inn_payer = serializers.CharField(write_only=True)
+    inn_recipient = serializers.CharField(write_only=True)
 
     # поля для response
     tg_user_id_display = serializers.SerializerMethodField()

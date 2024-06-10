@@ -16,7 +16,7 @@ ALLOWED_HOSTS = ["backend", "192.168.0.20", "localhost", "127.0.0.1", "[::1]"]
 # ALLOWED_HOSTS = ["*"]
 
 # CSRF_TRUSTED_ORIGINS = ["http://192.168.0.20:8000", "http://backend", "http://*", "https://*"]
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000",]
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://192.168.0.20:8000",]
 
 
 AUTH_USER_MODEL = "users.CustomUser"
@@ -65,23 +65,23 @@ TEMPLATES = [
 WSGI_APPLICATION = "b2b_hub.wsgi.application"
 
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", ""),
-        "USER": os.getenv("POSTGRES_USER", ""),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
-        "HOST": os.getenv("DB_HOST", ""),
-        "PORT": os.getenv("DB_PORT", 5432)
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.getenv("POSTGRES_DB", ""),
+#         "USER": os.getenv("POSTGRES_USER", ""),
+#         "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+#         "HOST": os.getenv("DB_HOST", ""),
+#         "PORT": os.getenv("DB_PORT", 5432)
+#     }
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
