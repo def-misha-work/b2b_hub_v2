@@ -57,7 +57,7 @@ async def make_post_request(url, data):
         )
         if response.status_code != 201:
             logging.info(
-                f"Заявка не создана получен ответ: {response.status_code}"
+                f"Ошибка POST запроса, статус: {response.status_code}"
             )
         return response
 

@@ -56,6 +56,7 @@ async def cmd_start(message: Message, state: FSMContext):
     tg_surname = message.from_user.last_name
     user_storage = UserStorage(tg_id, tg_username, tg_name, tg_surname)
     user_dict = user_storage.to_dict()
+    print(user_dict)
 
     try:
         response = await make_post_request(ENDPONT_CREATE_USER, user_dict)

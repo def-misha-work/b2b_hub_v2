@@ -24,14 +24,14 @@ services:
     # ports:
     #   - "8001:8000"
 
-  bot:
-    build:
-      context: ../tg_bot/
-      dockerfile: Dockerfile
-    depends_on:
-      - backend
-    env_file:
-      - ../tg_bot/.env
+  # bot:
+  #   build:
+  #     context: ../tg_bot/
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - backend
+  #   env_file:
+  #     - ../tg_bot/.env
 
   nginx:
     image: nginx:1.19.3
