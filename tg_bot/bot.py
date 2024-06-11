@@ -6,6 +6,8 @@ from handlers import (
     new_application,
     different_types,
     my_legal_entities,
+    repeat_application,
+    application_list,
 )
 from constants import TELEGRAM_TOKEN
 
@@ -20,6 +22,8 @@ async def main():
     dp.include_router(start.router)
     dp.include_router(new_application.router)
     dp.include_router(my_legal_entities.router)
+    dp.include_router(repeat_application.py.router)
+    dp.include_router(application_list.py.router)
     # Запускаем бота и пропускаем все накопленные входящие
     # Да, этот метод можно вызвать даже если поллинг
     await bot.delete_webhook(drop_pending_updates=True)

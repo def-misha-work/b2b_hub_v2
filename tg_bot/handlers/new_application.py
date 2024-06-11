@@ -10,7 +10,6 @@ from aiogram.fsm.context import FSMContext
 from keyboards.main_menu import get_menu
 from requests import (
     make_post_request,
-    make_get_request,
     make_patch_request,
 )
 from storage import ApplicationStorage
@@ -22,7 +21,6 @@ from constants import (
     SERVICE_CHAT_ID,
     ENDPONT_CREATE_APPLICATION,
     MESSAGES_TO_MANAGER,
-    ENDPONT_GET_APPLICATION_LIST,
     ENDPONT_PATCH_COMPANY,
     MANAGER_CHAT_ID
 )
@@ -246,59 +244,3 @@ async def invalid_values_target_date(
     await message.answer(MESSAGES["step4"])
     await state.set_state(NewApplication.step_4)
     logging.info("Ошибка на шаге 4")
-
-
-@router.message(F.text.lower() == "мои заявки")
-async def get_application_list(message: Message):
-    """Обрабатывает клик по кнопке Список заявок."""
-    tg_id = str(message.from_user.id)
-    application_list = False
-    try:
-        response = await make_get_request(ENDPONT_GET_APPLICATION_LIST, tg_id)
-        application_list = json.loads(response.text)
-    except Exception as e:
-        logging.info(f"Ошибка при получение спиcка заявок: {e}")
-        await send_message(
-            SERVICE_CHAT_ID, f"Ошибка при получение спика заявок: {e}"
-        )
-        await message.answer(TECH_MESSAGES["api_error"])
-
-    if application_list:
-        for application in application_list:
-            answer = MESSAGES["application"].format(
-                application["id"],
-                *application["inn_payer"],
-                # application["name_payer"],
-                *application["inn_recipient"],
-                # application["name_recipient"],
-                application["cost"],
-                application["target_date"],
-            )
-            await message.answer(f"Ваши заявки: {answer}")
-        logging.info("Пользователь получил список заявок")
-
-        await message.answer(MESSAGES["menu"], reply_markup=get_menu())
-        logging.info("Пользователь в меню")
-    else:
-        await message.answer("У вас нет активных заявок.")
-        logging.info("Пользователь получил список заявок (пустой)")
-        await message.answer(MESSAGES["menu"], reply_markup=get_menu())
-        logging.info("Пользователь в меню")
-
-
-@router.message(StateFilter(None), F.text.lower() == "повторить заявку")
-async def application_repeat(message: Message, state: FSMContext):
-    """Обрабатывает клик по кнопке Повторить заявку."""
-    tg_id = str(message.from_user.id)
-    try:
-        response = await make_get_request(ENDPONT_GET_APPLICATION_LIST, tg_id)
-    except Exception as e:
-        logging.info(f"Ошибка при получение спиcка заявок: {e}")
-        await send_message(
-            SERVICE_CHAT_ID, f"Ошибка при получение спика заявок: {e}"
-        )
-        await message.answer(TECH_MESSAGES["api_error"])
-    logging.info(f"Ответ с заявками {response.text}")
-    logging.info(f"Ответ с заявками {type(response.text)}")
-    last_application = json.loads(response.text)
-    await message.answer(f"Ваша последняя заявка: {last_application[-1]}")
