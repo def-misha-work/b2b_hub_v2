@@ -56,15 +56,10 @@ async def cmd_start(message: Message, state: FSMContext):
     tg_surname = message.from_user.last_name
     user_storage = UserStorage(tg_id, tg_username, tg_name, tg_surname)
     user_dict = user_storage.to_dict()
-    print(user_dict)
 
     try:
         response = await make_post_request(ENDPONT_CREATE_USER, user_dict)
-        if response.status_code == 200:
-            logging.info(f"""
-                Пользователь уже есть:  @{tg_username},
-                код: {response.status_code}""")
-        elif response.status_code == 201:
+        if response.status_code == 201:
             logging.info(f"Пользователь создан @{tg_username}")
             await send_message(
                 SERVICE_CHAT_ID, f"Новый пользователь @{tg_username}"
@@ -74,12 +69,12 @@ async def cmd_start(message: Message, state: FSMContext):
             )
         else:
             logging.info(f"Пользователь не создан: {response.status_code}")
-            await send_message(
-                SERVICE_CHAT_ID, f"Пользователь не создан @{tg_username}"
-            )
     except Exception as e:
         logging.info(f"Ошибка при создании пользователя: {e}")
-        await send_message(SERVICE_CHAT_ID, "Ошибка создания пользователя")
+        await send_message(
+            SERVICE_CHAT_ID,
+            f"Ошибка при создании пользователя: {e}"
+        )
 
     await message.answer(MESSAGES["start"].format(tg_name))
     await message.answer(MESSAGES["menu"], reply_markup=get_menu())
