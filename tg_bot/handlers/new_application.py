@@ -6,9 +6,8 @@ from aiogram.filters import StateFilter
 from aiogram.types import Message
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from dotenv import load_dotenv
 
-from keyboards.for_questions import get_menu
+from keyboards.main_menu import get_menu
 from requests import (
     make_post_request,
     make_get_request,
@@ -24,13 +23,11 @@ from constants import (
     ENDPONT_CREATE_APPLICATION,
     MESSAGES_TO_MANAGER,
     ENDPONT_GET_APPLICATION_LIST,
-    ENDPONT_GET_COMPANY_LIST,
     ENDPONT_PATCH_COMPANY,
     MANAGER_CHAT_ID
 )
 
 
-load_dotenv()
 router = Router()
 application_storage = ApplicationStorage()
 
@@ -287,40 +284,6 @@ async def get_application_list(message: Message):
         logging.info("Пользователь получил список заявок (пустой)")
         await message.answer(MESSAGES["menu"], reply_markup=get_menu())
         logging.info("Пользователь в меню")
-
-
-@router.message(F.text.lower() == "мои юр. лица")
-async def answer_no1(message: Message):
-    """Обрабатывает клик по кнопке 'мои юр. лица'."""
-    logging.info("Пользователь запросил компании")
-    tg_id = str(message.from_user.id)
-    company_list = False
-    try:
-        response = await make_get_request(ENDPONT_GET_COMPANY_LIST, tg_id)
-        company_list = json.loads(response.text)
-    except Exception as e:
-        logging.info(f"Ошибка при получение спиcка компаний: {e}")
-        await send_message(
-            SERVICE_CHAT_ID, f"Ошибка при получение спиcка компаний: {e}"
-        )
-        await message.answer(TECH_MESSAGES["api_error"])
-
-    if company_list:
-        for company in company_list:
-            answer = MESSAGES["company"].format(
-                company["company_name"],
-                company["company_inn"]
-            )
-            await message.answer(answer)
-        logging.info("Пользователь получил список компаний")
-    else:
-        await message.answer(
-            "Создайте первую заявку, для добавления компании."
-        )
-        logging.info("Пользователь получил список заявок (пустой)")
-
-    await message.answer(MESSAGES["menu"], reply_markup=get_menu())
-    logging.info("Пользователь в меню")
 
 
 @router.message(StateFilter(None), F.text.lower() == "повторить заявку")

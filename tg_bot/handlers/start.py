@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 
 from storage import UserStorage
 
-from keyboards.for_questions import get_menu
+from keyboards.main_menu import get_menu
 from requests import make_post_request
 from utils import send_message
 from constants import (
