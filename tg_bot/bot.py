@@ -1,7 +1,7 @@
 ﻿import asyncio
 import logging
 from aiogram import Bot, Dispatcher
-from handlers import questions, different_types
+from handlers import start, questions, different_types
 from constants import TELEGRAM_TOKEN
 
 
@@ -12,6 +12,7 @@ async def main():
     bot = Bot(token=TELEGRAM_TOKEN)
     dp = Dispatcher()
     dp.include_router(different_types.router)
+    dp.include_router(start.router)
     dp.include_router(questions.router)
     # Запускаем бота и пропускаем все накопленные входящие
     # Да, этот метод можно вызвать даже если поллинг
