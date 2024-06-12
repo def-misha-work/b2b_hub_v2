@@ -48,6 +48,12 @@ class ApplicationStorage():
             "target_date": self.target_date,
         }
 
+    def clear_data(self):
+        self.tg_id = None
+        self.application_cost = None
+        self.target_date = None
+        self.application_id = None
+
 
 class CompanyPayerStorage():
     def __init__(self, tg_id=None, company_inn=None, company_name=None):
@@ -71,6 +77,11 @@ class CompanyPayerStorage():
             "company_name_payer": self.company_name,
         }
 
+    def clear_data(self):
+        self.tg_id = None
+        self.company_inn = None
+        self.company_name = None
+
 
 class CompanyPecipientStorage():
     def __init__(self, tg_id=None, company_inn=None, company_name=None):
@@ -93,3 +104,8 @@ class CompanyPecipientStorage():
             "company_inn_recipient": self.company_inn,
             "company_name_recipient": self.company_name,
         }
+
+    def clear_data(self):
+        self.tg_id = None
+        self.company_inn = None
+        self.company_name = None

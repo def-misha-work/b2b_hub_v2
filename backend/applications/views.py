@@ -104,8 +104,12 @@ class CompaniesRecipientViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """Проверет, существует ли объект с таким company_inn_recipient."""
         company_inn_recipient = request.data.get('company_inn_recipient')
-        if CompaniesRecipient.objects.filter(company_inn_recipient=company_inn_recipient).exists():
-            instance = CompaniesRecipient.objects.get(company_inn_recipient=company_inn_recipient)
+        if CompaniesRecipient.objects.filter(
+            company_inn_recipient=company_inn_recipient
+        ).exists():
+            instance = CompaniesRecipient.objects.get(
+                company_inn_recipient=company_inn_recipient
+            )
             serializer = self.get_serializer(instance)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:

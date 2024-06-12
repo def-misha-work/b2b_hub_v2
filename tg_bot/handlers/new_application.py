@@ -198,8 +198,7 @@ async def get_target_date(message: types.Message, state: FSMContext):
     data_dict["inn_payer"] = company_payer_storage.company_inn
     data_dict["inn_recipient"] = company_recipient_storage.company_inn
 
-    logging.info(f"Словарь с заявкой: {data_dict}")
-
+    # сохраняем в бд
     try:
         response = await make_post_request(
             EP_APPLICATION, data_dict
@@ -214,7 +213,7 @@ async def get_target_date(message: types.Message, state: FSMContext):
         await message.answer(MESSAGES["menu"], reply_markup=get_menu())
         logging.info(f"Пользователь {tg_username} в меню")
 
-    # Отправляем в саппорт
+    # Отправляем в саппорт и менеджеры
     if application_id:
         application_message = MESSAGES["application"].format(
             application_id,
@@ -237,10 +236,14 @@ async def get_target_date(message: types.Message, state: FSMContext):
         await send_message(MANAGER_CHAT_ID, message_manager)
 
         await message.answer(message_user)
-        await state.set_state(None)
-        await message.answer(MESSAGES["menu"], reply_markup=get_menu())
-        logging.info(f"Пользователь {tg_username} в меню")
-        logging.info("Успех шаг 4")
+
+    application_storage.clear_data()
+    company_payer_storage.clear_data()
+    company_recipient_storage.clear_data()
+    await state.set_state(None)
+    await message.answer(MESSAGES["menu"], reply_markup=get_menu())
+    logging.info(f"Пользователь {tg_username} в меню")
+    logging.info("Успех шаг 4")
 
 
 @router.message(F.text, NewApplication.step_4)
