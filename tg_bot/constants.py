@@ -15,12 +15,13 @@ MANAGER_CHAT_ID = os.getenv("MANAGER_CHAT_ID")
 DOMANE_NAME = "http://127.0.0.1:8000/"
 ENDPONT_CREATE_USER = DOMANE_NAME + "api/v1/tg_users/"
 ENDPONT_GET_APPLICATION_LIST = DOMANE_NAME + "api/v1/applications/"
-# PAYER
+# Payer
 EP_COMPANY_PAYER = DOMANE_NAME + "api/v1/companies_payer/"
-# RECIPIENT
+# Recipient
 EP_COMPANY_RECIPIENT = DOMANE_NAME + "api/v1/companies_recipient/"
+# Apllications
 EP_APPLICATION = DOMANE_NAME + "api/v1/applications/"
-
+GET_PARAM_USER = "?tg_user__tg_user_id="
 # Получение информации о компании по ИНН
 ENDPONT_GET_COMPANY_NAME = "http://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party" # noqa
 DADATA_API_KEY = "c132632530b566d1a154c8379ce78e6d6b1c9713"
