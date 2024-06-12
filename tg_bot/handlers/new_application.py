@@ -78,11 +78,14 @@ async def get_inn_payer(message: types.Message, state: FSMContext):
 
     # Обновляем информацию о компаниях в базе.
     try:
-        await make_post_request(
+        response = await make_post_request(
             EP_COMPANY_PAYER,
             company_payer_storage.to_dict()
         )
-        logging.info("Компании плательщик создана")
+        if response.status_code == 201:
+            logging.info("Компании плательщик создана")
+        if response.status_code == 200:
+            logging.info("Компании плательщик есть в бд")
     except Exception as e:
         logging.info(f"Ошибка {e} запроса обновления компании")
         await message.answer(TECH_MESSAGES["api_error"])
@@ -116,18 +119,21 @@ async def get_inn_recipient(message: types.Message, state: FSMContext):
     # получаем и сохраняем данные компании
     try:
         company_name = await get_dadata_company_name(inn_recipient)
-        company_payer_storage.update_company_name(company_name)
+        company_recipient_storage.update_company_name(company_name)
         await message.answer(f"Название вашей компании: {company_name}")
     except Exception:
         await message.answer(TECH_MESSAGES["company_error"])
 
     # Обновляем информацию о компаниях в базе.
     try:
-        await make_post_request(
+        response = await make_post_request(
             EP_COMPANY_RECIPIENT,
-            company_payer_storage.to_dict()
+            company_recipient_storage.to_dict()
         )
-        logging.info("Компании получатель создана")
+        if response.status_code == 201:
+            logging.info("Компании получатель создана")
+        if response.status_code == 200:
+            logging.info("Компании получатель есть в бд")
     except Exception as e:
         logging.info(f"Ошибка {e} запроса обновления компании получателя")
         await message.answer(TECH_MESSAGES["api_error"])

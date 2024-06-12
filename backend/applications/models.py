@@ -50,13 +50,13 @@ class CompaniesPayer(TimestampMixin, models.Model):
         verbose_name="Владелец компании",
         default=None,
     )
-    company_name = models.CharField(
+    company_name_payer = models.CharField(
         verbose_name="Название компании плательщика",
         max_length=512,
         default=None,
         null=True
     )
-    company_inn = models.CharField(
+    company_inn_payer = models.CharField(
         verbose_name="ИНН плательщика 10 цифр",
         max_length=10,
         unique=True
@@ -65,7 +65,6 @@ class CompaniesPayer(TimestampMixin, models.Model):
     class Meta:
         verbose_name = "Компания плательщик"
         verbose_name_plural = "Компании плательщики"
-        unique_together = ('tg_user', 'company_inn')
 
     def __str__(self):
         return self.company_name
@@ -78,13 +77,13 @@ class CompaniesRecipient(TimestampMixin, models.Model):
         verbose_name="Владелец компании",
         default=None,
     )
-    company_name = models.CharField(
+    company_name_recipient = models.CharField(
         verbose_name="Название компании получателя",
         max_length=512,
         default=None,
         null=True
     )
-    company_inn = models.CharField(
+    company_inn_recipient = models.CharField(
         verbose_name="ИНН получателя 12 цифр",
         max_length=12,
         unique=True
@@ -93,7 +92,6 @@ class CompaniesRecipient(TimestampMixin, models.Model):
     class Meta:
         verbose_name = "Компания получатель"
         verbose_name_plural = "Компании получатели"
-        unique_together = ('tg_user', 'company_inn')
 
     def __str__(self):
         return self.company_name

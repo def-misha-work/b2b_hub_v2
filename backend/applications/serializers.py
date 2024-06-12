@@ -26,8 +26,8 @@ class CompaniesPayerSerializer(serializers.ModelSerializer):
         model = CompaniesPayer
         fields = (
             "tg_user_id",
-            "company_name",
-            "company_inn",
+            "company_name_payer",
+            "company_inn_payer",
         )
 
     def get_tg_user_id(self, obj):
@@ -43,8 +43,8 @@ class CompaniesPostUpdatePayerSerializer(serializers.ModelSerializer):
         fields = (
             "tg_user_id",
             "tg_user_id_display",
-            "company_name",
-            "company_inn",
+            "company_name_payer",
+            "company_inn_payer",
         )
 
     def get_tg_user_id_display(self, obj):
@@ -90,8 +90,8 @@ class CompaniesRecipientSerializer(serializers.ModelSerializer):
         model = CompaniesRecipient
         fields = (
             "tg_user_id",
-            "company_name",
-            "company_inn",
+            "company_name_recipient",
+            "company_inn_recipient",
         )
 
     def get_tg_user_id(self, obj):
@@ -107,8 +107,8 @@ class CompaniesPostUpdateRecipientSerializer(serializers.ModelSerializer):
         fields = (
             "tg_user_id",
             "tg_user_id_display",
-            "company_name",
-            "company_inn",
+            "company_name_recipient",
+            "company_inn_recipient",
         )
 
     def get_tg_user_id_display(self, obj):
@@ -173,10 +173,10 @@ class ApplicationsSerializer(serializers.ModelSerializer):
         return obj.tg_user.tg_user_id
 
     def get_inn_payer(self, obj):
-        return obj.inn_payer.company_inn
+        return obj.inn_payer.company_inn_payer
 
     def get_inn_recipient(self, obj):
-        return obj.inn_recipient.company_inn
+        return obj.inn_recipient.company_inn_recipient
 
 
 class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
@@ -213,10 +213,10 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
         return obj.tg_user.tg_user_id
 
     def get_inn_payer_display(self, obj):
-        return obj.inn_payer.company_inn
+        return obj.inn_payer.company_inn_payer
 
     def get_inn_recipient_display(self, obj):
-        return obj.inn_recipient.company_inn
+        return obj.inn_recipient.company_inn_recipient
 
     def create(self, validated_data):
         tg_user_id = validated_data.pop('tg_user_id')
@@ -229,7 +229,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
 
         inn_payer = validated_data.pop('inn_payer')
         try:
-            inn_payer = CompaniesPayer.objects.get(company_inn=inn_payer)
+            inn_payer = CompaniesPayer.objects.get(company_inn_payer=inn_payer)
         except CompaniesPayer.DoesNotExist:
             raise serializers.ValidationError(
                 "Нет компании плательщика с таким ИНН."
@@ -238,7 +238,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
         inn_recipient = validated_data.pop('inn_recipient')
         try:
             inn_recipient = CompaniesRecipient.objects.get(
-                company_inn=inn_recipient
+                company_inn_recipient=inn_recipient
             )
         except CompaniesRecipient.DoesNotExist:
             raise serializers.ValidationError(
@@ -269,7 +269,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
         if inn_payer_data is not None:
             try:
                 inn_payer = CompaniesPayer.objects.get(
-                    company_inn=inn_payer_data
+                    company_inn_payer=inn_payer_data
                 )
                 instance.inn_payer = inn_payer
             except CompaniesPayer.DoesNotExist:
@@ -280,7 +280,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
         if inn_recipient_data is not None:
             try:
                 inn_recipient = CompaniesRecipient.objects.get(
-                    company_inn=inn_recipient_data
+                    company_inn_recipient=inn_recipient_data
                 )
                 instance.inn_recipient = inn_recipient
             except CompaniesRecipient.DoesNotExist:

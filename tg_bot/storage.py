@@ -67,8 +67,8 @@ class CompanyPayerStorage():
     def to_dict(self):
         return {
             "tg_user_id": self.tg_id,
-            "company_inn": self.company_inn,
-            "company_name": self.company_name,
+            "company_inn_payer": self.company_inn,
+            "company_name_payer": self.company_name,
         }
 
 
@@ -90,6 +90,6 @@ class CompanyPecipientStorage():
     def to_dict(self):
         return {
             "tg_user_id": self.tg_id,
-            "company_inn": self.company_inn,
-            "company_name": self.company_name,
+            "company_inn_recipient": self.company_inn,
+            "company_name_recipient": self.company_name,
         }

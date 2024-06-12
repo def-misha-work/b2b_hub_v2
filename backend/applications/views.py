@@ -1,5 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
 
@@ -31,6 +31,16 @@ class TelegamUsersViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
+    def create(self, request, *args, **kwargs):
+        """Проверет, существует ли объект с таким tg_user_id."""
+        tg_user_id = request.data.get('tg_user_id')
+        if TelegamUsers.objects.filter(tg_user_id=tg_user_id).exists():
+            instance = TelegamUsers.objects.get(tg_user_id=tg_user_id)
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return super().create(request, *args, **kwargs)
+
 
 class CompaniesPayerViewSet(viewsets.ModelViewSet):
     queryset = CompaniesPayer.objects.all().order_by("created_at")
@@ -42,7 +52,7 @@ class CompaniesPayerViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter
     ]
     filterset_fields = ['tg_user__tg_user_id']
-    lookup_field = 'company_inn'
+    lookup_field = 'company_inn_payer'
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -53,6 +63,20 @@ class CompaniesPayerViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return CompaniesPayerSerializer
         return CompaniesPostUpdatePayerSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Проверет, существует ли объект с таким company_inn_payer."""
+        company_inn_payer = request.data.get('company_inn_payer')
+        if CompaniesPayer.objects.filter(
+            company_inn_payer=company_inn_payer
+        ).exists():
+            instance = CompaniesPayer.objects.get(
+                company_inn_payer=company_inn_payer
+            )
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return super().create(request, *args, **kwargs)
 
 
 class CompaniesRecipientViewSet(viewsets.ModelViewSet):
@@ -65,7 +89,7 @@ class CompaniesRecipientViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter
     ]
     filterset_fields = ['tg_user__tg_user_id']
-    lookup_field = 'company_inn'
+    lookup_field = 'company_inn_recipient'
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -76,6 +100,16 @@ class CompaniesRecipientViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return CompaniesRecipientSerializer
         return CompaniesPostUpdateRecipientSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Проверет, существует ли объект с таким company_inn_recipient."""
+        company_inn_recipient = request.data.get('company_inn_recipient')
+        if CompaniesRecipient.objects.filter(company_inn_recipient=company_inn_recipient).exists():
+            instance = CompaniesRecipient.objects.get(company_inn_recipient=company_inn_recipient)
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return super().create(request, *args, **kwargs)
 
 
 class ApplicationsViewSet(viewsets.ModelViewSet):

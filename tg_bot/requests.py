@@ -56,12 +56,15 @@ async def make_post_request(url, data):
             json=data,
             auth=(BASIC_USER_LOGIN, BASIC_USER_PASSWORD)
         )
-        if response.status_code != 201:
+        if response.status_code != 201 and response.status_code != 200:
             logging.info(
                 f"Ошибка POST запроса, статус: {response.status_code}"
             )
             logging.info(
                 f"Тело ответа: {response.json}"
+            )
+            logging.info(
+                f"Текст ответа: {response.text}"
             )
         return response
 
