@@ -77,6 +77,12 @@ async def make_get_request(url, value):
         )
         if response.status_code != 200:
             logging.info(
-                f"Список заявок не получен, ответ: {response.status_code}"
+                f"Ошибка GET запроса, статус: {response.status_code}"
+            )
+            logging.info(
+                f"Тело ответа: {response.json}"
+            )
+            logging.info(
+                f"Текст ответа: {response.text}"
             )
         return response

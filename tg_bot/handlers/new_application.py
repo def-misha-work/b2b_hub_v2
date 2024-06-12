@@ -8,7 +8,11 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
 from keyboards.main_menu import get_menu
-from requests import make_post_request
+from keyboards.company_meny import get_company_menu
+from requests import (
+    make_post_request,
+    make_get_request,
+)
 from storage import (
     ApplicationStorage,
     CompanyPayerStorage,
@@ -28,6 +32,7 @@ from constants import (
     EP_COMPANY_PAYER,
     EP_COMPANY_RECIPIENT,
     EP_APPLICATION,
+    GET_PARAM_USER,
 )
 
 
@@ -44,13 +49,35 @@ class NewApplication(StatesGroup):
     step_4 = State()
 
 
-# Старт цепочки создание заявки step_1
+# Старт цепочки создание заявки
 @router.message(StateFilter(None), F.text.lower() == "новая заявка")
 async def application_step_one(message: Message, state: FSMContext):
     """Обрабатывает клик по кнопке и запускает цепочку Новая заявка."""
 
     tg_username = message.from_user.username
     await message.answer(MESSAGES["step1"])
+
+    value = GET_PARAM_USER + str(message.from_user.id)
+    try:
+        response = await make_get_request(EP_COMPANY_PAYER, value)
+        company_list = json.loads(response.text)
+    except Exception:
+        logging.info(f"@{tg_username} не смог получить список зявок")
+
+    if len(company_list) > 0:
+        await message.answer("У вас уже есть компании плательщики:")
+        company_meny = []
+        for company in company_list:
+            company_text = MESSAGES["company"].format(
+                company["company_name_payer"],
+                company["company_inn_payer"]
+            )
+            company_meny.append(company["company_inn_payer"])
+            await message.answer(f"{company_text}")
+        await message.answer(
+            "Кнопки:",
+            reply_markup=get_company_menu(company_meny)
+        )
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
 
@@ -60,21 +87,37 @@ async def application_step_one(message: Message, state: FSMContext):
     lambda message: message.text.isdigit() and len(message.text) == 10,
     NewApplication.step_1
 )
-async def get_inn_payer(message: types.Message, state: FSMContext):
+@router.callback_query(
+    lambda callback: callback.data.isdigit() and len(callback.data) == 10,
+    NewApplication.step_1
+)
+async def get_inn_payer(
+    update: types.Message | types.CallbackQuery,
+    state: FSMContext
+):
     """Обработка сообщения с числом из ровно 10 символов."""
+    if isinstance(update, types.Message):
+        inn_payer = update.text
+        answer_func = update.answer
+    elif isinstance(update, types.CallbackQuery):
+        inn_payer = update.data
+        answer_func = update.message.answer
+    else:
+        await update.answer("Что то не то...")
+        await update.message.answer("Что то не то...")
+        return
 
-    inn_payer = message.text
-    company_payer_storage.update_tg_id(message.from_user.id)
+    company_payer_storage.update_tg_id(update.from_user.id)
     company_payer_storage.update_company_inn(inn_payer)
-    await message.answer(f"Вы ввели ИНН плательщика: {inn_payer}")
+    await answer_func(f"Вы ввели ИНН плательщика: {inn_payer}")
 
     # получаем и сохраняем данные компании
     try:
         company_name = await get_dadata_company_name(inn_payer)
         company_payer_storage.update_company_name(company_name)
-        await message.answer(f"Название вашей компании: {company_name}")
+        await answer_func(f"Название вашей компании: {company_name}")
     except Exception:
-        await message.answer(TECH_MESSAGES["company_error"])
+        await answer_func(TECH_MESSAGES["company_error"])
 
     # Обновляем информацию о компаниях в базе.
     try:
@@ -88,9 +131,9 @@ async def get_inn_payer(message: types.Message, state: FSMContext):
             logging.info("Компании плательщик есть в бд")
     except Exception as e:
         logging.info(f"Ошибка {e} запроса обновления компании")
-        await message.answer(TECH_MESSAGES["api_error"])
+        await answer_func(TECH_MESSAGES["api_error"])
 
-    await message.answer(MESSAGES["step2"])
+    await answer_func(MESSAGES["step2"])
     await state.set_state(NewApplication.step_2)
     logging.info("Успех шаг 1")
 
