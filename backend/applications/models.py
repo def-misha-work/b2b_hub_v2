@@ -65,6 +65,7 @@ class CompaniesPayer(TimestampMixin, models.Model):
     class Meta:
         verbose_name = "Компания плательщик"
         verbose_name_plural = "Компании плательщики"
+        unique_together = ('tg_user', 'company_inn')
 
     def __str__(self):
         return self.company_name
@@ -92,6 +93,7 @@ class CompaniesRecipient(TimestampMixin, models.Model):
     class Meta:
         verbose_name = "Компания получатель"
         verbose_name_plural = "Компании получатели"
+        unique_together = ('tg_user', 'company_inn')
 
     def __str__(self):
         return self.company_name

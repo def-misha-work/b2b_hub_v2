@@ -82,6 +82,12 @@ class ApplicationsViewSet(viewsets.ModelViewSet):
     queryset = Applications.objects.all().order_by("created_at")
     serializer_class = ApplicationsSerializer
     authentication_classes = [BasicAuthentication]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    ]
+    filterset_fields = ['tg_user__tg_user_id']
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
