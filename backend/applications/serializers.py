@@ -20,21 +20,131 @@ class TelegamUsersSerializer(serializers.ModelSerializer):
 
 
 class CompaniesPayerSerializer(serializers.ModelSerializer):
+    tg_user_id = serializers.SerializerMethodField()
+
     class Meta:
         model = CompaniesPayer
         fields = (
+            "tg_user_id",
             "company_name",
             "company_inn",
         )
+
+    def get_tg_user_id(self, obj):
+        return obj.tg_user.tg_user_id
+
+
+class CompaniesPostUpdatePayerSerializer(serializers.ModelSerializer):
+    tg_user_id = serializers.IntegerField(write_only=True)
+    tg_user_id_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CompaniesPayer
+        fields = (
+            "tg_user_id",
+            "tg_user_id_display",
+            "company_name",
+            "company_inn",
+        )
+
+    def get_tg_user_id_display(self, obj):
+        return obj.tg_user.tg_user_id
+
+    def create(self, validated_data):
+        tg_user_id = validated_data.pop('tg_user_id')
+        try:
+            tg_user = TelegamUsers.objects.get(tg_user_id=tg_user_id)
+        except TelegamUsers.DoesNotExist:
+            raise serializers.ValidationError(
+                "Нет юзера с таким id."
+            )
+
+        return CompaniesPayer.objects.create(
+            tg_user=tg_user,
+            **validated_data
+        )
+
+    def update(self, instance, validated_data):
+        tg_user_id = validated_data.pop('tg_user_id', None)
+
+        if tg_user_id is not None:
+            try:
+                tg_user = TelegamUsers.objects.get(
+                    tg_user_id=tg_user_id
+                )
+                instance.tg_user = tg_user
+            except TelegamUsers.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Нет юзера с таким id."
+                )
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class CompaniesRecipientSerializer(serializers.ModelSerializer):
+    tg_user_id = serializers.SerializerMethodField()
+
     class Meta:
         model = CompaniesRecipient
         fields = (
+            "tg_user_id",
             "company_name",
             "company_inn",
         )
+
+    def get_tg_user_id(self, obj):
+        return obj.tg_user.tg_user_id
+
+
+class CompaniesPostUpdateRecipientSerializer(serializers.ModelSerializer):
+    tg_user_id = serializers.IntegerField(write_only=True)
+    tg_user_id_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CompaniesRecipient
+        fields = (
+            "tg_user_id",
+            "tg_user_id_display",
+            "company_name",
+            "company_inn",
+        )
+
+    def get_tg_user_id_display(self, obj):
+        return obj.tg_user.tg_user_id
+
+    def create(self, validated_data):
+        tg_user_id = validated_data.pop('tg_user_id')
+        try:
+            tg_user = TelegamUsers.objects.get(tg_user_id=tg_user_id)
+        except TelegamUsers.DoesNotExist:
+            raise serializers.ValidationError(
+                "Нет юзера с таким id."
+            )
+
+        return CompaniesRecipient.objects.create(
+            tg_user=tg_user,
+            **validated_data
+        )
+
+    def update(self, instance, validated_data):
+        tg_user_id = validated_data.pop('tg_user_id', None)
+
+        if tg_user_id is not None:
+            try:
+                tg_user = TelegamUsers.objects.get(
+                    tg_user_id=tg_user_id
+                )
+                instance.tg_user = tg_user
+            except TelegamUsers.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Нет юзера с таким id."
+                )
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class ApplicationsSerializer(serializers.ModelSerializer):

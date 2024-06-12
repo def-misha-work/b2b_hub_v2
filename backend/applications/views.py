@@ -1,11 +1,14 @@
-from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, filters
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
 
 from applications.serializers import (
     TelegamUsersSerializer,
     CompaniesPayerSerializer,
+    CompaniesPostUpdatePayerSerializer,
     CompaniesRecipientSerializer,
+    CompaniesPostUpdateRecipientSerializer,
     ApplicationsSerializer,
     ApplicationsPostUpdateSerializer,
 )
@@ -33,24 +36,46 @@ class CompaniesPayerViewSet(viewsets.ModelViewSet):
     queryset = CompaniesPayer.objects.all().order_by("created_at")
     serializer_class = CompaniesPayerSerializer
     authentication_classes = [BasicAuthentication]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    ]
+    filterset_fields = ['tg_user__tg_user_id']
     lookup_field = 'company_inn'
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return CompaniesPayerSerializer
+        return CompaniesPostUpdatePayerSerializer
 
 
 class CompaniesRecipientViewSet(viewsets.ModelViewSet):
     queryset = CompaniesRecipient.objects.all().order_by("created_at")
     serializer_class = CompaniesRecipientSerializer
     authentication_classes = [BasicAuthentication]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    ]
+    filterset_fields = ['tg_user__tg_user_id']
     lookup_field = 'company_inn'
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return CompaniesRecipientSerializer
+        return CompaniesPostUpdateRecipientSerializer
 
 
 class ApplicationsViewSet(viewsets.ModelViewSet):

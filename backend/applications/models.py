@@ -44,6 +44,12 @@ class TelegamUsers(TimestampMixin, models.Model):
 
 
 class CompaniesPayer(TimestampMixin, models.Model):
+    tg_user = models.ForeignKey(
+        TelegamUsers,
+        on_delete=models.CASCADE,
+        verbose_name="Владелец компании",
+        default=None,
+    )
     company_name = models.CharField(
         verbose_name="Название компании плательщика",
         max_length=512,
@@ -65,6 +71,12 @@ class CompaniesPayer(TimestampMixin, models.Model):
 
 
 class CompaniesRecipient(TimestampMixin, models.Model):
+    tg_user = models.ForeignKey(
+        TelegamUsers,
+        on_delete=models.CASCADE,
+        verbose_name="Владелец компании",
+        default=None,
+    )
     company_name = models.CharField(
         verbose_name="Название компании получателя",
         max_length=512,
