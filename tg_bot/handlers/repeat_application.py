@@ -22,7 +22,7 @@ application_storage = ApplicationStorage()
 
 
 @router.message(StateFilter(None), F.text.lower() == "повторить заявку")
-async def application_repeat(message: Message, state: FSMContext):
+async def new_repeat_application(message: Message, state: FSMContext):
     """Обрабатывает клик по кнопке Повторить заявку."""
     tg_id = str(message.from_user.id)
     try:

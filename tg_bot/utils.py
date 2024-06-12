@@ -4,9 +4,10 @@ from aiogram import Bot
 from constants import (
     SERVICE_TELEGRAM_TOKEN,
     SERVICE_CHAT_ID,
-    TECH_MESSAGES,
+    TECH_MESSAGES
 )
 from requests import get_company_name
+
 
 service_bot = Bot(token=SERVICE_TELEGRAM_TOKEN)
 

@@ -13,7 +13,7 @@ from constants import (
     MESSAGES,
     TECH_MESSAGES,
     SERVICE_CHAT_ID,
-    ENDPONT_GET_COMPANY_LIST,
+    EP_COMPANY_PAYER,
 )
 
 router = Router()
@@ -26,7 +26,7 @@ async def answer_no1(message: Message):
     tg_id = str(message.from_user.id)
     company_list = False
     try:
-        response = await make_get_request(ENDPONT_GET_COMPANY_LIST, tg_id)
+        response = await make_get_request(EP_COMPANY_PAYER, tg_id)
         company_list = json.loads(response.text)
     except Exception as e:
         logging.info(f"Ошибка при получение спиcка компаний: {e}")

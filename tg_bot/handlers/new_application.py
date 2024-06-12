@@ -12,8 +12,15 @@ from requests import (
     make_post_request,
     make_patch_request,
 )
-from storage import ApplicationStorage
-from utils import send_message, get_dadata_company_name
+from storage import (
+    ApplicationStorage,
+    CompanyPayerStorage,
+    CompanyPecipientStorage,
+)
+from utils import (
+    send_message,
+    get_dadata_company_name,
+)
 from validators import validate_date
 from constants import (
     MESSAGES,
@@ -21,13 +28,16 @@ from constants import (
     SERVICE_CHAT_ID,
     ENDPONT_CREATE_APPLICATION,
     MESSAGES_TO_MANAGER,
-    ENDPONT_PATCH_COMPANY,
-    MANAGER_CHAT_ID
+    MANAGER_CHAT_ID,
+    EP_COMPANY_PAYER,
+    EP_COMPANY_RECIPIENT,
 )
 
 
 router = Router()
 application_storage = ApplicationStorage()
+company_payer_storage = CompanyPayerStorage()
+company_recipient_storage = CompanyPecipientStorage()
 
 
 class NewApplication(StatesGroup):
@@ -56,33 +66,30 @@ async def application_step_one(message: Message, state: FSMContext):
 )
 async def get_inn_payer(message: types.Message, state: FSMContext):
     """Обработка сообщения с числом из ровно 10 символов."""
-    inn_payer = int(message.text)
-    application_storage.update_inn_payer([inn_payer])
+
+    inn_payer = message.text
+    company_payer_storage.update_tg_id(message.from_user.id)
+    company_payer_storage.update_company_inn(inn_payer)
     await message.answer(f"Вы ввели ИНН плательщика: {inn_payer}")
 
     # получаем и сохраняем данные компании
     try:
         company_name = await get_dadata_company_name(inn_payer)
-        application_storage.update_name_payer(company_name)
+        company_payer_storage.update_company_name(company_name)
         await message.answer(f"Название вашей компании: {company_name}")
     except Exception:
         await message.answer(TECH_MESSAGES["company_error"])
 
     # Обновляем информацию о компаниях в базе.
-    company_patch_url = f"""
-            {ENDPONT_PATCH_COMPANY}{application_storage.inn_payer}/update
-            """
-    data = {
-        "company_inn": application_storage.inn_payer,
-        "company_name": application_storage.name_payer,
-        }
     try:
-        await make_patch_request(
-            company_patch_url,
-            data,
+        await make_post_request(
+            EP_COMPANY_PAYER,
+            company_payer_storage.to_dict()
         )
+        logging.info("Компании плательщик создана")
     except Exception as e:
         logging.info(f"Ошибка {e} запроса обновления компании")
+        await message.answer(TECH_MESSAGES["api_error"])
 
     await message.answer(MESSAGES["step2"])
     await state.set_state(NewApplication.step_2)
@@ -105,33 +112,29 @@ async def invalid_values_inn_payer(message: types.Message, state: FSMContext):
 )
 async def get_inn_recipient(message: types.Message, state: FSMContext):
     """Обработка сообщения с числом из ровно 12 символов."""
-    inn_recipient = int(message.text)
-    application_storage.update_inn_recipient([inn_recipient])
+    inn_recipient = message.text
+    company_recipient_storage.update_tg_id(message.from_user.id)
+    company_recipient_storage.update_company_inn(inn_recipient)
     await message.answer(f"Вы ввели ИНН получателя: {inn_recipient}")
 
     # получаем и сохраняем данные компании
     try:
         company_name = await get_dadata_company_name(inn_recipient)
-        application_storage.update_name_recipient(company_name)
+        company_payer_storage.update_company_name(company_name)
         await message.answer(f"Название вашей компании: {company_name}")
     except Exception:
         await message.answer(TECH_MESSAGES["company_error"])
 
     # Обновляем информацию о компаниях в базе.
-    company_patch_url = f"""
-            {ENDPONT_PATCH_COMPANY}{application_storage.inn_recipient}/update
-            """
-    data = {
-        "company_inn": application_storage.inn_recipient,
-        "company_name": application_storage.name_recipient,
-        }
     try:
-        await make_patch_request(
-            company_patch_url,
-            data,
+        await make_post_request(
+            EP_COMPANY_RECIPIENT,
+            company_payer_storage.to_dict()
         )
+        logging.info("Компании получатель создана")
     except Exception as e:
-        logging.info(f"Ошибка {e} запроса обновления компании")
+        logging.info(f"Ошибка {e} запроса обновления компании получателя")
+        await message.answer(TECH_MESSAGES["api_error"])
 
     await message.answer(MESSAGES["step3"])
     await state.set_state(NewApplication.step_3)
@@ -189,9 +192,6 @@ async def get_target_date(message: types.Message, state: FSMContext):
     tg_username = message.from_user.username
 
     application_dict = application_storage.to_dict()
-    # TODO убрать костыль после доработки бека.
-    del application_dict['name_payer']
-    del application_dict['name_recipient']
 
     application_id = False
     try:
