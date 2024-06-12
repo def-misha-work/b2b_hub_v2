@@ -43,9 +43,9 @@ class ApplicationStorage():
 
     def to_dict(self):
         return {
-            "target_date": self.target_date,
-            "cost": self.application_cost,
             "tg_user_id": self.tg_id,
+            "cost": self.application_cost,
+            "target_date": self.target_date,
         }
 
 

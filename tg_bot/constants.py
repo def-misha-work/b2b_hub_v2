@@ -14,13 +14,12 @@ MANAGER_CHAT_ID = os.getenv("MANAGER_CHAT_ID")
 # DOMANE_NAME = "http://backend:8000/" # прод для докера
 DOMANE_NAME = "http://127.0.0.1:8000/"
 ENDPONT_CREATE_USER = DOMANE_NAME + "api/v1/tg_users/"
-ENDPONT_CREATE_APPLICATION = DOMANE_NAME + "api/v1/applications/"
 ENDPONT_GET_APPLICATION_LIST = DOMANE_NAME + "api/v1/applications/"
 # PAYER
 EP_COMPANY_PAYER = DOMANE_NAME + "api/v1/companies_payer/"
 # RECIPIENT
 EP_COMPANY_RECIPIENT = DOMANE_NAME + "api/v1/companies_recipient/"
-
+EP_APPLICATION = DOMANE_NAME + "api/v1/applications/"
 
 # Получение информации о компании по ИНН
 ENDPONT_GET_COMPANY_NAME = "http://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party" # noqa
@@ -49,15 +48,15 @@ step4_message = """
 """
 application_message = """
 Номер заявки: {},
-\nИНН плательщика: {},
-\nНаименование плательщика: {},
-\nИНН получателя: {},
-\nНаименование получателя: {},
 \nСумма заявки: {},
 \nДата выполнения заявки: {}
+\nПлательщик: {},
+\nИНН плательщика: {},
+\nПолучатель: {},
+\nИНН получатель: {},
 """
 application_created_message = """
-Ваша заявка создана:
+Ваша заявка создана: {}
 \nМы свяжемся в Вами в ближайшее рабочее время. Спасибо!
 """
 company_message = "Название компании: {}\nИНН компании: {}"
@@ -76,7 +75,7 @@ MESSAGES = {
 }
 
 MESSAGES_TO_MANAGER = {
-    "application_created": "Заявка от пользователя: {},\nНик в TG: @{}\nЗаявка: {}",
+    "application_created": "Заявка от пользователя: {},\nНик в TG: @{}\nЗаявка:\n{}",
 }
 TECH_MESSAGES = {
     "alert_message": "Извините, но я могу обработать только текст",

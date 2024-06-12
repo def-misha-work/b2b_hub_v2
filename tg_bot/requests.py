@@ -50,6 +50,7 @@ async def make_patch_request(url, data):
 
 async def make_post_request(url, data):
     async with httpx.AsyncClient() as client:
+        logging.info(f"Ссылка для запроса: {url}")
         response = await client.post(
             url,
             json=data,
@@ -58,6 +59,9 @@ async def make_post_request(url, data):
         if response.status_code != 201:
             logging.info(
                 f"Ошибка POST запроса, статус: {response.status_code}"
+            )
+            logging.info(
+                f"Тело ответа: {response.json}"
             )
         return response
 

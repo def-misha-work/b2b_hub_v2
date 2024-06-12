@@ -8,10 +8,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
 from keyboards.main_menu import get_menu
-from requests import (
-    make_post_request,
-    make_patch_request,
-)
+from requests import make_post_request
 from storage import (
     ApplicationStorage,
     CompanyPayerStorage,
@@ -26,11 +23,11 @@ from constants import (
     MESSAGES,
     TECH_MESSAGES,
     SERVICE_CHAT_ID,
-    ENDPONT_CREATE_APPLICATION,
     MESSAGES_TO_MANAGER,
     MANAGER_CHAT_ID,
     EP_COMPANY_PAYER,
     EP_COMPANY_RECIPIENT,
+    EP_APPLICATION,
 )
 
 
@@ -53,7 +50,6 @@ async def application_step_one(message: Message, state: FSMContext):
     """Обрабатывает клик по кнопке и запускает цепочку Новая заявка."""
 
     tg_username = message.from_user.username
-    application_storage.update_tg_id(message.from_user.id)
     await message.answer(MESSAGES["step1"])
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
@@ -187,16 +183,20 @@ async def invalid_values_application_cost(
 )
 async def get_target_date(message: types.Message, state: FSMContext):
     """Обработка сообщения с датой в формате 20.10.25."""
-    target_date = message.text
-    application_storage.update_target_date(target_date)
     tg_username = message.from_user.username
-
-    application_dict = application_storage.to_dict()
-
     application_id = False
+
+    application_storage.update_tg_id(message.from_user.id)
+    application_storage.update_target_date(message.text)
+    data_dict = application_storage.to_dict()
+    data_dict["inn_payer"] = company_payer_storage.company_inn
+    data_dict["inn_recipient"] = company_recipient_storage.company_inn
+
+    logging.info(f"Словарь с заявкой: {data_dict}")
+
     try:
         response = await make_post_request(
-            ENDPONT_CREATE_APPLICATION, application_dict
+            EP_APPLICATION, data_dict
         )
         data = json.loads(response.text)
         application_id = data["id"]
@@ -204,28 +204,33 @@ async def get_target_date(message: types.Message, state: FSMContext):
         logging.info(f"Ошибка при создании заявки: {e}")
         await send_message(SERVICE_CHAT_ID, f"Ошибка создания заявки {e}")
         await message.answer(TECH_MESSAGES["api_error"])
+        await state.set_state(None)
+        await message.answer(MESSAGES["menu"], reply_markup=get_menu())
+        logging.info(f"Пользователь {tg_username} в меню")
 
     # Отправляем в саппорт
     if application_id:
-        application_storage.update_application_id(application_id)
-        application_info = MESSAGES["application"].format(
-            application_storage.application_id,
-            *application_storage.inn_payer,
-            application_storage.name_payer,
-            *application_storage.inn_recipient,
-            application_storage.name_recipient,
+        application_message = MESSAGES["application"].format(
+            application_id,
             application_storage.application_cost,
-            application_storage.target_date
+            application_storage.target_date,
+            company_payer_storage.company_name,
+            company_payer_storage.company_inn,
+            company_recipient_storage.company_name,
+            company_recipient_storage.company_inn
         )
-        appl_to_manager = MESSAGES_TO_MANAGER["application_created"].format(
+        message_manager = MESSAGES_TO_MANAGER["application_created"].format(
             message.from_user.first_name,
             message.from_user.username,
-            application_info
+            application_message
         )
-        await send_message(SERVICE_CHAT_ID, appl_to_manager)
-        await send_message(MANAGER_CHAT_ID, appl_to_manager)
-        await message.answer("Ваша заявка:" + application_info)
-        await message.answer(MESSAGES["application_created"])
+        message_user = MESSAGES["application_created"].format(
+            application_message
+        )
+        await send_message(SERVICE_CHAT_ID, message_manager)
+        await send_message(MANAGER_CHAT_ID, message_manager)
+
+        await message.answer(message_user)
         await state.set_state(None)
         await message.answer(MESSAGES["menu"], reply_markup=get_menu())
         logging.info(f"Пользователь {tg_username} в меню")
