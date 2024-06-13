@@ -8,6 +8,7 @@ from constants import (
     TECH_MESSAGES,
     MESSAGES,
     GET_PARAM_USER,
+    EP_APPLICATION,
 )
 from requests import (
     get_company_name,
@@ -99,3 +100,16 @@ async def update_company_in_database(
     except Exception as e:
         logging.info(f"Ошибка {e} запроса обновления компании")
         await answer_func(TECH_MESSAGES["api_error"])
+
+
+async def get_apllications_list(message, value):
+    try:
+        response = await make_get_request(EP_APPLICATION, value)
+        application_list = json.loads(response.text)
+        return application_list
+    except Exception as e:
+        logging.info(f"Ошибка при получение спиcка заявок: {e}")
+        await send_message(
+            SERVICE_CHAT_ID, f"Ошибка при получение спика заявок: {e}"
+        )
+        await message.answer(TECH_MESSAGES["api_error"])

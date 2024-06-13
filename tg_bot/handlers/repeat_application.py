@@ -10,11 +10,12 @@ from storage import ApplicationStorage
 from requests import (
     make_get_request,
 )
-from utils import send_message
+from utils import send_message, get_apllications_list
 from constants import (
     TECH_MESSAGES,
     SERVICE_CHAT_ID,
-    ENDPONT_GET_APPLICATION_LIST,
+    EP_APPLICATION,
+    GET_PARAM_USER,
 )
 
 router = Router()

@@ -14,7 +14,6 @@ MANAGER_CHAT_ID = os.getenv("MANAGER_CHAT_ID")
 # DOMANE_NAME = "http://backend:8000/" # прод для докера
 DOMANE_NAME = "http://127.0.0.1:8000/"
 ENDPONT_CREATE_USER = DOMANE_NAME + "api/v1/tg_users/"
-ENDPONT_GET_APPLICATION_LIST = DOMANE_NAME + "api/v1/applications/"
 # Payer
 EP_COMPANY_PAYER = DOMANE_NAME + "api/v1/companies_payer/"
 # Recipient
