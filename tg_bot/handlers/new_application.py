@@ -8,6 +8,8 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
 from keyboards.main_menu import get_menu
+from keyboards.company_meny import get_company_menu
+
 from requests import (
     make_post_request,
 )
@@ -58,15 +60,19 @@ async def start_new_application(message: Message, state: FSMContext):
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
     await message.answer(MESSAGES["step1"])
-    await get_company_list(
+    company_meny = await get_company_list(
         message.answer,
         tg_username,
         tg_user_id,
         EP_COMPANY_PAYER,
         "company_name_payer",
         "company_inn_payer",
-        "плательщики",
     )
+    if company_meny:
+        await message.answer(
+            "Нажмите кнопку для выбора или введите новый ИНН:",
+            reply_markup=get_company_menu(company_meny)
+        )
 
 
 @router.message(
@@ -103,15 +109,19 @@ async def process_inn_payer(
     )
 
     await answer_func(MESSAGES["step2"])
-    await get_company_list(
+    company_meny = await get_company_list(
         answer_func,
         tg_username,
         tg_user_id,
         EP_COMPANY_RECIPIENT,
         "company_name_recipient",
         "company_inn_recipient",
-        "получатели",
     )
+    if company_meny:
+        await answer_func(
+            "Нажмите кнопку для выбора или введите новый ИНН:",
+            reply_markup=get_company_menu(company_meny)
+        )
     await state.set_state(NewApplication.step_2)
     logging.info("Успех шаг 1")
 

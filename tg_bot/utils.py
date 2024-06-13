@@ -39,8 +39,7 @@ async def get_company_list(
     tg_user_id,
     endpoint,
     company_name,
-    company_inn,
-    text,
+    company_inn
 ):
     value = GET_PARAM_USER + str(tg_user_id)
     try:
@@ -51,7 +50,6 @@ async def get_company_list(
         return
 
     if len(company_list) > 0:
-        await answer_func(f"У вас уже есть компании {text}:")
         company_meny = []
         for company in company_list:
             company_text = MESSAGES["company"].format(
@@ -60,10 +58,7 @@ async def get_company_list(
             )
             company_meny.append(company[company_inn])
             await answer_func(f"{company_text}")
-        await answer_func(
-            "Нажмите кнопку для выбора или введите новый ИНН:",
-            reply_markup=get_company_menu(company_meny)
-        )
+        return company_meny
 
 
 async def extract_inn_from_update(update: types.Message | types.CallbackQuery):
