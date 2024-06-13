@@ -8,12 +8,9 @@ from keyboards.main_menu import get_menu
 from requests import (
     make_get_request,
 )
-from utils import send_message, get_apllications_list
+from utils import get_apllications_list
 from constants import (
     MESSAGES,
-    TECH_MESSAGES,
-    SERVICE_CHAT_ID,
-    EP_APPLICATION,
     EP_COMPANY_PAYER,
     EP_COMPANY_RECIPIENT,
     GET_PARAM_USER,

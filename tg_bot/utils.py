@@ -110,6 +110,6 @@ async def get_apllications_list(message, value):
     except Exception as e:
         logging.info(f"Ошибка при получение спиcка заявок: {e}")
         await send_message(
-            SERVICE_CHAT_ID, f"Ошибка при получение спика заявок: {e}"
+            SERVICE_CHAT_ID, f"Ошибка при получение спиcка заявок: {e}"
         )
         await message.answer(TECH_MESSAGES["api_error"])
