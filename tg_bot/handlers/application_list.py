@@ -57,7 +57,7 @@ async def get_application_list(message: Message):
                 application["name_recipient"],
                 application["inn_recipient"],
             )
-            await message.answer(f"Ваши заявки: {answer}")
+            await message.answer(f"{answer}")
         logging.info("Пользователь получил список заявок")
 
         await message.answer(MESSAGES["menu"], reply_markup=get_menu())
