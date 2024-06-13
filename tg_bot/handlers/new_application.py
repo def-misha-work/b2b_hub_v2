@@ -60,7 +60,7 @@ async def start_new_application(message: Message, state: FSMContext):
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
     await message.answer(MESSAGES["step1"])
-    company_meny = await get_company_list(
+    company_menu = await get_company_list(
         message.answer,
         tg_username,
         tg_user_id,
@@ -68,10 +68,10 @@ async def start_new_application(message: Message, state: FSMContext):
         "company_name_payer",
         "company_inn_payer",
     )
-    if company_meny:
+    if company_menu:
         await message.answer(
             "Нажмите кнопку для выбора или введите новый ИНН:",
-            reply_markup=get_company_menu(company_meny)
+            reply_markup=get_company_menu(company_menu)
         )
 
 
