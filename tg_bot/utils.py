@@ -33,10 +33,6 @@ async def get_dadata_company_name(inn):
     return company_name
 
 
-async def send_user_message(message, text):
-    message.answer(text)
-
-
 async def get_company_list(
     answer_func,
     tg_username,
@@ -73,21 +69,13 @@ async def get_company_list(
 async def extract_inn_from_update(update: types.Message | types.CallbackQuery):
     if isinstance(update, types.Message):
         return update.text
-    elif isinstance(update, types.CallbackQuery):
-        return update.data
-    else:
-        await update.answer("Что то не то...")
-        await update.message.answer("Что то не то...")
-        return ""
+    return update.data
 
 
 async def get_answer_function(update: types.Message | types.CallbackQuery):
     if isinstance(update, types.Message):
         return update.answer
-    elif isinstance(update, types.CallbackQuery):
-        return update.message.answer
-    else:
-        return lambda _: None
+    return update.message.answer
 
 
 async def get_company_name_from_dadata(inn_payer, answer_func):

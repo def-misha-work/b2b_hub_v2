@@ -18,8 +18,6 @@ from storage import (
 )
 from utils import (
     send_message,
-    get_dadata_company_name,
-    send_user_message,
     get_company_list,
     extract_inn_from_update,
     get_answer_function,
@@ -59,7 +57,7 @@ async def start_new_application(message: Message, state: FSMContext):
     tg_user_id = message.from_user.id
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
-    await send_user_message(message, MESSAGES["step1"])
+    await message.answer(MESSAGES["step1"])
     await get_company_list(
         message.answer,
         tg_username,
