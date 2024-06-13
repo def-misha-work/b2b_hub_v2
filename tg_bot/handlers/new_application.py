@@ -8,10 +8,8 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
 from keyboards.main_menu import get_menu
-from keyboards.company_meny import get_company_menu
 from requests import (
     make_post_request,
-    make_get_request,
 )
 from storage import (
     ApplicationStorage,
@@ -21,6 +19,8 @@ from storage import (
 from utils import (
     send_message,
     get_dadata_company_name,
+    send_user_message,
+    get_company_list,
 )
 from validators import validate_date
 from constants import (
@@ -32,7 +32,6 @@ from constants import (
     EP_COMPANY_PAYER,
     EP_COMPANY_RECIPIENT,
     EP_APPLICATION,
-    GET_PARAM_USER,
 )
 
 
@@ -49,37 +48,21 @@ class NewApplication(StatesGroup):
     step_4 = State()
 
 
-# Старт цепочки создание заявки
 @router.message(StateFilter(None), F.text.lower() == "новая заявка")
-async def application_step_one(message: Message, state: FSMContext):
+async def start_new_application(message: Message, state: FSMContext):
     """Обрабатывает клик по кнопке и запускает цепочку Новая заявка."""
-
     tg_username = message.from_user.username
-    await message.answer(MESSAGES["step1"])
-
-    value = GET_PARAM_USER + str(message.from_user.id)
-    try:
-        response = await make_get_request(EP_COMPANY_PAYER, value)
-        company_list = json.loads(response.text)
-    except Exception:
-        logging.info(f"@{tg_username} не смог получить список зявок")
-
-    if len(company_list) > 0:
-        await message.answer("У вас уже есть компании плательщики:")
-        company_meny = []
-        for company in company_list:
-            company_text = MESSAGES["company"].format(
-                company["company_name_payer"],
-                company["company_inn_payer"]
-            )
-            company_meny.append(company["company_inn_payer"])
-            await message.answer(f"{company_text}")
-        await message.answer(
-            "Кнопки:",
-            reply_markup=get_company_menu(company_meny)
-        )
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
+    await send_user_message(message, MESSAGES["step1"])
+    await get_company_list(
+        message,
+        tg_username,
+        EP_COMPANY_PAYER,
+        "company_name_payer",
+        "company_inn_payer",
+        "плательщики",
+    )
 
 
 # Обработка inn_payer step_1
@@ -256,7 +239,7 @@ async def get_target_date(message: types.Message, state: FSMContext):
         await message.answer(MESSAGES["menu"], reply_markup=get_menu())
         logging.info(f"Пользователь {tg_username} в меню")
 
-    # Отправляем в саппорт и менеджеры
+    # Отправляем в саппорт и менеджеру
     if application_id:
         application_message = MESSAGES["application"].format(
             application_id,
