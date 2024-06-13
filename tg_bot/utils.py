@@ -65,7 +65,7 @@ async def get_company_list(
             company_meny.append(company[company_inn])
             await answer_func(f"{company_text}")
         await answer_func(
-            "Нажмите кнопку для выбора:",
+            "Нажмите кнопку для выбора или введите новый ИНН:",
             reply_markup=get_company_menu(company_meny)
         )
 

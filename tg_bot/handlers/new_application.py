@@ -132,36 +132,37 @@ async def invalid_values_inn_payer(message: types.Message, state: FSMContext):
     lambda message: message.text.isdigit() and len(message.text) == 12,
     NewApplication.step_2
 )
-async def get_inn_recipient(message: types.Message, state: FSMContext):
+@router.callback_query(
+    lambda callback: callback.data.isdigit() and len(callback.data) == 12,
+    NewApplication.step_2
+)
+async def process_inn_recipient(
+    update: types.Message | types.CallbackQuery,
+    state: FSMContext
+):
     """Обработка сообщения с числом из ровно 12 символов."""
-    inn_recipient = message.text
-    company_recipient_storage.update_tg_id(message.from_user.id)
+    inn_recipient = await extract_inn_from_update(update)
+    answer_func = await get_answer_function(update)
+    tg_user_id = update.from_user.id
+    # tg_username = update.from_user.username
+
+    company_recipient_storage.update_tg_id(tg_user_id)
     company_recipient_storage.update_company_inn(inn_recipient)
-    await message.answer(f"Вы ввели ИНН получателя: {inn_recipient}")
-
-    # получаем и сохраняем данные компании
-    try:
-        company_name = await get_dadata_company_name(inn_recipient)
+    await answer_func(f"Вы ввели ИНН получателя: {inn_recipient}")
+    company_name = await get_company_name_from_dadata(
+        inn_recipient,
+        answer_func
+    )
+    if company_name:
+        await answer_func(f"Название вашей компании: {company_name}")
         company_recipient_storage.update_company_name(company_name)
-        await message.answer(f"Название вашей компании: {company_name}")
-    except Exception:
-        await message.answer(TECH_MESSAGES["company_error"])
-
-    # Обновляем информацию о компаниях в базе.
-    try:
-        response = await make_post_request(
-            EP_COMPANY_RECIPIENT,
-            company_recipient_storage.to_dict()
-        )
-        if response.status_code == 201:
-            logging.info("Компании получатель создана")
-        if response.status_code == 200:
-            logging.info("Компании получатель есть в бд")
-    except Exception as e:
-        logging.info(f"Ошибка {e} запроса обновления компании получателя")
-        await message.answer(TECH_MESSAGES["api_error"])
-
-    await message.answer(MESSAGES["step3"])
+    await update_company_in_database(
+        inn_recipient,
+        answer_func,
+        EP_COMPANY_RECIPIENT,
+        company_recipient_storage.to_dict(),
+    )
+    await answer_func(MESSAGES["step3"])
     await state.set_state(NewApplication.step_3)
     logging.info("Успех шаг 2")
 
