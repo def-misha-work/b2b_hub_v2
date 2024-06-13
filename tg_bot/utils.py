@@ -1,7 +1,7 @@
 ﻿import json
 import logging
 
-from aiogram import Bot
+from aiogram import Bot, types
 from constants import (
     SERVICE_TELEGRAM_TOKEN,
     SERVICE_CHAT_ID,
@@ -11,7 +11,8 @@ from constants import (
 )
 from requests import (
     get_company_name,
-    make_get_request
+    make_get_request,
+    make_post_request,
 )
 from keyboards.company_meny import get_company_menu
 
@@ -37,14 +38,15 @@ async def send_user_message(message, text):
 
 
 async def get_company_list(
-    message,
+    answer_func,
     tg_username,
+    tg_user_id,
     endpoint,
     company_name,
     company_inn,
     text,
 ):
-    value = GET_PARAM_USER + str(message.from_user.id)
+    value = GET_PARAM_USER + str(tg_user_id)
     try:
         response = await make_get_request(endpoint, value)
         company_list = json.loads(response.text)
@@ -53,7 +55,7 @@ async def get_company_list(
         return
 
     if len(company_list) > 0:
-        await message.answer(f"У вас уже есть компании {text}:")
+        await answer_func(f"У вас уже есть компании {text}:")
         company_meny = []
         for company in company_list:
             company_text = MESSAGES["company"].format(
@@ -61,8 +63,57 @@ async def get_company_list(
                 company[company_inn]
             )
             company_meny.append(company[company_inn])
-            await message.answer(f"{company_text}")
-        await message.answer(
+            await answer_func(f"{company_text}")
+        await answer_func(
             "Нажмите кнопку для выбора:",
             reply_markup=get_company_menu(company_meny)
         )
+
+
+async def extract_inn_from_update(update: types.Message | types.CallbackQuery):
+    if isinstance(update, types.Message):
+        return update.text
+    elif isinstance(update, types.CallbackQuery):
+        return update.data
+    else:
+        await update.answer("Что то не то...")
+        await update.message.answer("Что то не то...")
+        return ""
+
+
+async def get_answer_function(update: types.Message | types.CallbackQuery):
+    if isinstance(update, types.Message):
+        return update.answer
+    elif isinstance(update, types.CallbackQuery):
+        return update.message.answer
+    else:
+        return lambda _: None
+
+
+async def get_company_name_from_dadata(inn_payer, answer_func):
+    try:
+        company_name = await get_dadata_company_name(inn_payer)
+        return company_name
+    except Exception:
+        await answer_func(TECH_MESSAGES["company_error"])
+        return None
+
+
+async def update_company_in_database(
+    inn_payer,
+    answer_func,
+    endpoint,
+    data,
+):
+    try:
+        response = await make_post_request(
+            endpoint,
+            data
+        )
+        if response.status_code == 201:
+            logging.info("Компании плательщик создана")
+        elif response.status_code == 200:
+            logging.info("Компании плательщик есть в бд")
+    except Exception as e:
+        logging.info(f"Ошибка {e} запроса обновления компании")
+        await answer_func(TECH_MESSAGES["api_error"])

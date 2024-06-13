@@ -21,6 +21,10 @@ from utils import (
     get_dadata_company_name,
     send_user_message,
     get_company_list,
+    extract_inn_from_update,
+    get_answer_function,
+    get_company_name_from_dadata,
+    update_company_in_database,
 )
 from validators import validate_date
 from constants import (
@@ -52,12 +56,14 @@ class NewApplication(StatesGroup):
 async def start_new_application(message: Message, state: FSMContext):
     """Обрабатывает клик по кнопке и запускает цепочку Новая заявка."""
     tg_username = message.from_user.username
+    tg_user_id = message.from_user.id
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
     await send_user_message(message, MESSAGES["step1"])
     await get_company_list(
-        message,
+        message.answer,
         tg_username,
+        tg_user_id,
         EP_COMPANY_PAYER,
         "company_name_payer",
         "company_inn_payer",
@@ -65,7 +71,6 @@ async def start_new_application(message: Message, state: FSMContext):
     )
 
 
-# Обработка inn_payer step_1
 @router.message(
     lambda message: message.text.isdigit() and len(message.text) == 10,
     NewApplication.step_1
@@ -74,49 +79,41 @@ async def start_new_application(message: Message, state: FSMContext):
     lambda callback: callback.data.isdigit() and len(callback.data) == 10,
     NewApplication.step_1
 )
-async def get_inn_payer(
+async def process_inn_payer(
     update: types.Message | types.CallbackQuery,
     state: FSMContext
 ):
-    """Обработка сообщения с числом из ровно 10 символов."""
-    if isinstance(update, types.Message):
-        inn_payer = update.text
-        answer_func = update.answer
-    elif isinstance(update, types.CallbackQuery):
-        inn_payer = update.data
-        answer_func = update.message.answer
-    else:
-        await update.answer("Что то не то...")
-        await update.message.answer("Что то не то...")
-        return
+    """Обработка сообщения с ИНН плательщика."""
+    inn_payer = await extract_inn_from_update(update)
+    answer_func = await get_answer_function(update)
+    tg_user_id = update.from_user.id
+    tg_username = update.from_user.username
 
-    company_payer_storage.update_tg_id(update.from_user.id)
+    company_payer_storage.update_tg_id(tg_user_id)
     company_payer_storage.update_company_inn(inn_payer)
     await answer_func(f"Вы ввели ИНН плательщика: {inn_payer}")
-
-    # получаем и сохраняем данные компании
-    try:
-        company_name = await get_dadata_company_name(inn_payer)
-        company_payer_storage.update_company_name(company_name)
+    company_name = await get_company_name_from_dadata(inn_payer, answer_func)
+    if company_name:
         await answer_func(f"Название вашей компании: {company_name}")
-    except Exception:
-        await answer_func(TECH_MESSAGES["company_error"])
+        company_payer_storage.update_company_name(company_name)
 
-    # Обновляем информацию о компаниях в базе.
-    try:
-        response = await make_post_request(
-            EP_COMPANY_PAYER,
-            company_payer_storage.to_dict()
-        )
-        if response.status_code == 201:
-            logging.info("Компании плательщик создана")
-        if response.status_code == 200:
-            logging.info("Компании плательщик есть в бд")
-    except Exception as e:
-        logging.info(f"Ошибка {e} запроса обновления компании")
-        await answer_func(TECH_MESSAGES["api_error"])
+    await update_company_in_database(
+        inn_payer,
+        answer_func,
+        EP_COMPANY_PAYER,
+        company_payer_storage.to_dict(),
+    )
 
     await answer_func(MESSAGES["step2"])
+    await get_company_list(
+        answer_func,
+        tg_username,
+        tg_user_id,
+        EP_COMPANY_RECIPIENT,
+        "company_name_recipient",
+        "company_inn_recipient",
+        "получатели",
+    )
     await state.set_state(NewApplication.step_2)
     logging.info("Успех шаг 1")
 
