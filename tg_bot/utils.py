@@ -14,7 +14,6 @@ from requests import (
     make_get_request,
     make_post_request,
 )
-from keyboards.company_meny import get_company_menu
 
 
 service_bot = Bot(token=SERVICE_TELEGRAM_TOKEN)

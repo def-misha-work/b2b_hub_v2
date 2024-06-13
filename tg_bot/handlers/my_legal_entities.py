@@ -1,20 +1,15 @@
-﻿import json
-import logging
+﻿import logging
 
 from aiogram import Router, F, types
 from aiogram.types import Message
 
-from requests import make_get_request
 from keyboards.main_menu import get_menu
 from keyboards.legal_meny import get_legal_menu
-from utils import send_message, get_company_list
+from utils import get_company_list
 from constants import (
     MESSAGES,
-    TECH_MESSAGES,
-    SERVICE_CHAT_ID,
     EP_COMPANY_PAYER,
     EP_COMPANY_RECIPIENT,
-    GET_PARAM_USER,
 )
 
 router = Router()
