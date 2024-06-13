@@ -8,7 +8,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
 from keyboards.main_menu import get_menu
-from keyboards.company_meny import get_company_menu
+from keyboards.company_menu import get_company_menu
 
 from requests import (
     make_post_request,

@@ -4,7 +4,7 @@ from aiogram import Router, F, types
 from aiogram.types import Message
 
 from keyboards.main_menu import get_menu
-from keyboards.legal_meny import get_legal_menu
+from keyboards.legal_menu import get_legal_menu
 from utils import get_company_list
 from constants import (
     MESSAGES,

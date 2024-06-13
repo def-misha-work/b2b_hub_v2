@@ -113,3 +113,11 @@ async def get_apllications_list(message, value):
             SERVICE_CHAT_ID, f"Ошибка при получение спиcка заявок: {e}"
         )
         await message.answer(TECH_MESSAGES["api_error"])
+
+
+async def get_company_by_inn(url, inn):
+    try:
+        response = await make_get_request(url, inn + "/")
+    except Exception as e:
+        logging.info(f"Ошибка при получение компании: {e}")
+    return json.loads(response.text)
