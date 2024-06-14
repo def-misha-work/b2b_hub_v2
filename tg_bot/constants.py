@@ -55,6 +55,16 @@ application_message = """
 Получатель: {},
 ИНН получатель: {},
 """
+
+application_repeat = """
+Сумма заявки: {},
+Дата выполнения заявки: {}
+Плательщик: {},
+ИНН плательщика: {},
+Получатель: {},
+ИНН получатель: {},
+"""
+
 application_created_message = """
 Ваша заявка создана: {}
 Мы свяжемся в Вами в ближайшее рабочее время. Спасибо!
@@ -72,6 +82,7 @@ MESSAGES = {
     "application": application_message,
     "application_created": application_created_message,
     "company": company_message,
+    "application_repeat": application_repeat,
 }
 
 MESSAGES_TO_MANAGER = {

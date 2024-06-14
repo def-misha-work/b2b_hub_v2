@@ -18,6 +18,10 @@ from utils import (
     get_apllications_list,
     get_company_by_inn,
     get_company_list,
+    extract_inn_from_update,
+    get_answer_function,
+    get_company_name_from_dadata,
+    update_company_in_database,
 )
 from validators import validate_date
 from constants import (
@@ -32,6 +36,8 @@ application_storage = ApplicationStorage()
 company_payer_storage = CompanyPayerStorage()
 company_recipient_storage = CompanyPecipientStorage()
 
+COMPANY_LIST_ALL = []
+
 
 class NewCost(StatesGroup):
     edit_cost = State()
@@ -43,6 +49,10 @@ class NewTagetDate(StatesGroup):
 
 class NewPayer(StatesGroup):
     edit_payer = State()
+
+
+class NewRecipient(StatesGroup):
+    edit_recipient = State()
 
 
 async def record_storage(apllication, payer, recipient):
@@ -62,8 +72,7 @@ async def record_storage(apllication, payer, recipient):
 
 async def print_apllication(message):
     logging.info("Вывод заявки")
-    user_message = MESSAGES["application"].format(
-            application_storage.application_id,
+    user_message = MESSAGES["application_repeat"].format(
             application_storage.application_cost,
             application_storage.target_date,
             company_payer_storage.company_name,
@@ -71,7 +80,9 @@ async def print_apllication(message):
             company_recipient_storage.company_name,
             company_recipient_storage.company_inn
         )
-    await message.answer(f"Ваша заявка: {user_message}")
+    await message(
+        f"Заявка: {user_message}"
+    )
 
 
 @router.message(StateFilter(None), F.text.lower() == "повторить заявку")
@@ -101,7 +112,8 @@ async def new_repeat_application(message: Message, state: FSMContext):
         )
 
         await record_storage(old_apllication, company_payer, company_recipient)
-        await print_apllication(message)
+        await message.answer("Ваша последняя заявка была такой:")
+        await print_apllication(message.answer)
         await message.answer(
             "Вы можете отредактировать заявку или отправить ее менеджеру:",
             reply_markup=get_application_fields_menu()
@@ -127,7 +139,7 @@ async def edit_cost(message: types.Message, state: FSMContext):
     application_cost = int(message.text)
     application_storage.update_application_cost(application_cost)
     await message.answer(f"Вы ввели сумму заявки: {application_cost}")
-    await print_apllication(message)
+    await print_apllication(message.answer)
     await state.set_state(None)
     await message.answer(
         "Отредактируйте или отправьте заявку",
@@ -163,7 +175,7 @@ async def edit_target_date(message: types.Message, state: FSMContext):
     logging.info("Дата заявки отредактирована")
     application_storage.update_target_date(message.text)
     await message.answer(f"Вы ввели новую дату: {message.text}")
-    await print_apllication(message)
+    await print_apllication(message.answer)
     await state.set_state(None)
     await message.answer(
         "Отредактируйте или отправьте заявку",
@@ -187,9 +199,9 @@ async def invalid_values_target_date(
 
 @router.callback_query(lambda c: c.data == 'edit_payer')
 async def get_new_payer(update: types.CallbackQuery, state: FSMContext):
-    logging.info("Редактирование получателя")
+    logging.info("Редактирование плательщики начато")
     await state.set_state(NewPayer.edit_payer)
-    await update.message.answer("Ваши компании получатели:")
+    await update.message.answer("Ваши компании плательщики:")
     company_menu = await get_company_list(
         update.message.answer,
         update.message.from_user.username,
@@ -198,8 +210,156 @@ async def get_new_payer(update: types.CallbackQuery, state: FSMContext):
         "company_name_payer",
         "company_inn_payer",
     )
-    if company_menu:
-        await update.message.answer(
-            "Нажмите кнопку для выбора или введите новый ИНН:",
-            reply_markup=get_company_menu(company_menu)
+    global COMPANY_LIST_ALL
+    COMPANY_LIST_ALL = company_menu
+    await update.message.answer(
+        "Нажмите кнопку для выбора или введите новый ИНН:",
+        reply_markup=get_company_menu(company_menu)
+    )
+
+
+@router.message(
+    lambda message: message.text.isdigit() and len(message.text) == 10,
+    NewPayer.edit_payer
+)
+@router.callback_query(
+    lambda callback: callback.data.isdigit() and len(callback.data) == 10,
+    NewPayer.edit_payer
+)
+async def process_inn_payer(
+    update: types.Message | types.CallbackQuery,
+    state: FSMContext
+):
+    """Редактирование сообщения с ИНН плательщика."""
+    logging.info("Пользователь вводит нового плательщика")
+    inn_payer = await extract_inn_from_update(update)
+    answer_func = await get_answer_function(update)
+    company_payer_storage.update_tg_id(update.from_user.id)
+
+    if inn_payer in COMPANY_LIST_ALL:
+        response = await get_company_by_inn(EP_COMPANY_PAYER, inn_payer)
+        company_name = response["company_name_payer"]
+        company_payer_storage.update_company_name(company_name)
+        company_payer_storage.update_company_inn(inn_payer)
+        await print_apllication(answer_func)
+        await state.set_state(None)
+        await answer_func(
+            "Отредактируйте или отправьте заявку",
+            reply_markup=get_application_fields_menu()
         )
+    else:
+        await answer_func(f"Вы ввели ИНН плательщика: {inn_payer}")
+        company_payer_storage.update_company_inn(inn_payer)
+        company_name = await get_company_name_from_dadata(
+            inn_payer,
+            answer_func
+        )
+        if company_name:
+            await answer_func(f"Название вашей компании: {company_name}")
+            company_payer_storage.update_company_name(company_name)
+        await update_company_in_database(
+            inn_payer,
+            answer_func,
+            EP_COMPANY_PAYER,
+            company_payer_storage.to_dict(),
+        )
+        await print_apllication(answer_func)
+        await state.set_state(None)
+        await answer_func(
+            "Отредактируйте или отправьте заявку",
+            reply_markup=get_application_fields_menu()
+        )
+
+
+@router.message(F.text, NewPayer.edit_payer)
+async def invalid_values_inn_payer(message: types.Message, state: FSMContext):
+    """Валидация сообщения с числом из 10 символов."""
+    logging.info("Ошибка ввода ИНН плательщика")
+    await message.answer("Внимание! ИНН организации должен содержать 10 цифр!")
+    await state.set_state(NewPayer.edit_payer)
+
+
+@router.callback_query(lambda c: c.data == 'edit_recipient')
+async def get_new_recipient(update: types.CallbackQuery, state: FSMContext):
+    logging.info("Редактирование получателя начато")
+    await state.set_state(NewRecipient.edit_recipient)
+    await update.message.answer("Ваши компании получателя:")
+    company_menu = await get_company_list(
+        update.message.answer,
+        update.message.from_user.username,
+        update.from_user.id,
+        EP_COMPANY_RECIPIENT,
+        "company_name_recipient",
+        "company_inn_recipient",
+    )
+    global COMPANY_LIST_ALL
+    COMPANY_LIST_ALL = company_menu
+    await update.message.answer(
+        "Нажмите кнопку для выбора или введите новый ИНН:",
+        reply_markup=get_company_menu(company_menu)
+    )
+
+
+@router.message(
+    lambda message: message.text.isdigit() and len(message.text) == 12,
+    NewRecipient.edit_recipient
+)
+@router.callback_query(
+    lambda callback: callback.data.isdigit() and len(callback.data) == 12,
+    NewRecipient.edit_recipient
+)
+async def process_inn_recipient(
+    update: types.Message | types.CallbackQuery,
+    state: FSMContext
+):
+    """Редактирование сообщения с ИНН получателя."""
+    logging.info("Пользователь вводит нового получателя")
+    inn_recipient = await extract_inn_from_update(update)
+    answer_func = await get_answer_function(update)
+    company_recipient_storage.update_tg_id(update.from_user.id)
+
+    if inn_recipient in COMPANY_LIST_ALL:
+        response = await get_company_by_inn(
+            EP_COMPANY_RECIPIENT, inn_recipient
+        )
+        company_name = response["company_name_recipient"]
+        company_recipient_storage.update_company_name(company_name)
+        company_recipient_storage.update_company_inn(inn_recipient)
+        await print_apllication(answer_func)
+        await state.set_state(None)
+        await answer_func(
+            "Отредактируйте или отправьте заявку",
+            reply_markup=get_application_fields_menu()
+        )
+    else:
+        await answer_func(f"Вы ввели ИНН получателя: {inn_recipient}")
+        company_recipient_storage.update_company_inn(inn_recipient)
+        company_name = await get_company_name_from_dadata(
+            inn_recipient,
+            answer_func
+        )
+        if company_name:
+            await answer_func(f"Название вашей компании: {company_name}")
+            company_recipient_storage.update_company_name(company_name)
+        await update_company_in_database(
+            inn_recipient,
+            answer_func,
+            EP_COMPANY_RECIPIENT,
+            company_recipient_storage.to_dict(),
+        )
+        await print_apllication(answer_func)
+        await state.set_state(None)
+        await answer_func(
+            "Отредактируйте или отправьте заявку",
+            reply_markup=get_application_fields_menu()
+        )
+
+
+@router.message(F.text, NewRecipient.edit_recipient)
+async def invalid_values_inn_recipient(
+    message: types.Message, state: FSMContext
+):
+    """Валидация сообщения с числом из 12 символов."""
+    logging.info("Ошибка ввода ИНН плательщика")
+    await message.answer("Внимание! ИНН организации должен содержать 12 цифр!")
+    await state.set_state(NewRecipient.edit_recipient)

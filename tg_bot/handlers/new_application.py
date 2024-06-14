@@ -152,7 +152,6 @@ async def process_inn_recipient(
     inn_recipient = await extract_inn_from_update(update)
     answer_func = await get_answer_function(update)
     tg_user_id = update.from_user.id
-    # tg_username = update.from_user.username
 
     company_recipient_storage.update_tg_id(tg_user_id)
     company_recipient_storage.update_company_inn(inn_recipient)
