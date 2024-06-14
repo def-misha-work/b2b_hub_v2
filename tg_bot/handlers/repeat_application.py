@@ -1,4 +1,5 @@
 ﻿import logging
+import json
 
 from aiogram import Router, F, types
 from aiogram.filters import StateFilter
@@ -14,7 +15,9 @@ from storage import (
 from keyboards.main_menu import get_menu
 from keyboards.company_menu import get_company_menu
 from keyboards.application_fields_menu import get_application_fields_menu
+from requests import make_post_request
 from utils import (
+    send_message,
     get_apllications_list,
     get_company_by_inn,
     get_company_list,
@@ -29,6 +32,11 @@ from constants import (
     MESSAGES,
     EP_COMPANY_PAYER,
     EP_COMPANY_RECIPIENT,
+    EP_APPLICATION,
+    SERVICE_CHAT_ID,
+    TECH_MESSAGES,
+    MESSAGES_TO_MANAGER,
+    MANAGER_CHAT_ID,
 )
 
 router = Router()
@@ -90,6 +98,7 @@ async def new_repeat_application(message: Message, state: FSMContext):
     """Обрабатывает клик по кнопке Повторить заявку."""
     logging.info("Пользователь повторяет заявку")
     tg_user_id = message.from_user.id
+    application_storage.update_tg_id(tg_user_id)
     value = GET_PARAM_USER + str(tg_user_id)
     try:
         apllications_list = await get_apllications_list(message, value)
@@ -363,3 +372,56 @@ async def invalid_values_inn_recipient(
     logging.info("Ошибка ввода ИНН плательщика")
     await message.answer("Внимание! ИНН организации должен содержать 12 цифр!")
     await state.set_state(NewRecipient.edit_recipient)
+
+
+@router.callback_query(lambda c: c.data == 'send_apllication')
+async def create_new_apllication(update: types.CallbackQuery):
+    logging.info("Отправка заявки в БД")
+    tg_username = update.message.from_user.username
+
+    data_dict = application_storage.to_dict()
+    data_dict["inn_payer"] = company_payer_storage.company_inn
+    data_dict["inn_recipient"] = company_recipient_storage.company_inn
+
+    try:
+        response = await make_post_request(
+            EP_APPLICATION, data_dict
+        )
+        data = json.loads(response.text)
+        application_id = data["id"]
+    except Exception as e:
+        logging.info(f"Ошибка при создании заявки: {e}")
+        await send_message(
+            SERVICE_CHAT_ID, f"Ошибка создания повторной заявки {e}")
+        await update.message.answer(TECH_MESSAGES["api_error"])
+        await update.message.answer(MESSAGES["menu"], reply_markup=get_menu())
+        logging.info(f"Пользователь {tg_username} в меню")
+
+    if application_id:
+        application_message = MESSAGES["application"].format(
+            application_id,
+            application_storage.application_cost,
+            application_storage.target_date,
+            company_payer_storage.company_name,
+            company_payer_storage.company_inn,
+            company_recipient_storage.company_name,
+            company_recipient_storage.company_inn
+        )
+        message_manager = MESSAGES_TO_MANAGER["application_created"].format(
+            update.message.from_user.first_name,
+            update.message.from_user.username,
+            application_message
+        )
+        message_user = MESSAGES["application_created"].format(
+            application_message
+        )
+        await send_message(SERVICE_CHAT_ID, message_manager)
+        await send_message(MANAGER_CHAT_ID, message_manager)
+
+        await update.message.answer(message_user)
+
+    application_storage.clear_data()
+    company_payer_storage.clear_data()
+    company_recipient_storage.clear_data()
+    await update.message.answer(MESSAGES["menu"], reply_markup=get_menu())
+    logging.info(f"Пользователь {tg_username} в меню")
