@@ -54,7 +54,7 @@ class ApplicationsAdmin(admin.ModelAdmin):
         "inn_recipient",
     )
     list_filter = (
-        "target_date",
+        "created_at",
         "tg_user",
     )
     search_fields = (
