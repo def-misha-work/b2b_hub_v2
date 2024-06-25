@@ -12,6 +12,7 @@ services:
     ports:
       - "8001:8000"
 
+
   backend:
     build:
       context: ../backend/
