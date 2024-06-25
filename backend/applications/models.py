@@ -3,8 +3,14 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class TimestampMixin(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата создания",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Дата обновления",
+    )
 
     class Meta:
         abstract = True
@@ -67,7 +73,10 @@ class CompaniesPayer(TimestampMixin, models.Model):
         verbose_name_plural = "Компании плательщики"
 
     def __str__(self):
-        return self.company_name
+        if self.company_name_payer:
+            return self.company_name_payer
+        else:
+            return self.company_inn_payer
 
 
 class CompaniesRecipient(TimestampMixin, models.Model):
@@ -94,7 +103,10 @@ class CompaniesRecipient(TimestampMixin, models.Model):
         verbose_name_plural = "Компании получатели"
 
     def __str__(self):
-        return self.company_name
+        if self.company_name_recipient:
+            return self.company_name_recipient
+        else:
+            return self.company_inn_recipient
 
 
 class Applications(TimestampMixin, models.Model):
@@ -114,13 +126,13 @@ class Applications(TimestampMixin, models.Model):
         CompaniesPayer,
         related_name="applications_as_payer",
         on_delete=models.CASCADE,
-        verbose_name="ИНН получателя",
+        verbose_name="Название или ИНН получателя",
     )
     inn_recipient = models.ForeignKey(
         CompaniesRecipient,
         related_name="applications_as_recipient",
         on_delete=models.CASCADE,
-        verbose_name="ИНН плательщика",
+        verbose_name="Название или ИНН плательщика",
     )
 
     class Meta:
