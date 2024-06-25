@@ -184,7 +184,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
     tg_user_id = serializers.IntegerField(write_only=True)
     target_date = serializers.DateField(
         format="%d.%m.%y",
-        input_formats=['%d.%m.%y', 'iso-8601']
+        input_formats=['%d.%m.%y', '%d.%m.%Y', 'iso-8601']
     )
     inn_payer = serializers.CharField(write_only=True)
     inn_recipient = serializers.CharField(write_only=True)
