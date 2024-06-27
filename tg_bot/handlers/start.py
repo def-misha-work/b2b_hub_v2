@@ -24,11 +24,11 @@ router = Router()
 async def cmd_start(message: Message, state: FSMContext):
     """Запускает бота по команде /start. Выводит меню.
     Отправляет в БД запрос на создание юзера."""
-    logging.info("Пользователь запустил бота")
+    tg_username = message.from_user.username
+    logging.info(f"Пользователь {tg_username} запустил бота")
     await state.set_state(None)
 
     tg_id = str(message.from_user.id)
-    tg_username = message.from_user.username
     tg_name = message.from_user.first_name
     tg_surname = message.from_user.last_name
     user_storage = UserStorage(tg_id, tg_username, tg_name, tg_surname)
@@ -47,10 +47,10 @@ async def cmd_start(message: Message, state: FSMContext):
         else:
             logging.info(f"Пользователь не создан: {response.status_code}")
     except Exception as e:
-        logging.info(f"Ошибка при создании пользователя: {e}")
+        logging.info(f"Ошибка при создании пользователя {tg_username}: {e}")
         await send_message(
             SERVICE_CHAT_ID,
-            f"Ошибка при создании пользователя: {e}"
+            f"Ошибка при создании пользователя {tg_username}: {e}"
         )
 
     await message.answer(MESSAGES["start"].format(tg_name))

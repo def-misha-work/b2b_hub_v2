@@ -58,12 +58,12 @@ async def get_application_list(message: Message):
                 application["inn_recipient"],
             )
             await message.answer(f"{answer}")
-        logging.info("Пользователь получил список заявок")
+        logging.info(f"Пользователь {tg_user_id} получил список заявок")
 
         await message.answer(MESSAGES["menu"], reply_markup=get_menu())
-        logging.info("Пользователь в меню")
+        logging.info(f"Пользователь {tg_user_id} в меню")
     else:
         await message.answer("У вас нет активных заявок.")
-        logging.info("Пользователь получил список заявок (пустой)")
+        logging.info(f"Пользователь {tg_user_id} получил список заявок (пустой)")
         await message.answer(MESSAGES["menu"], reply_markup=get_menu())
-        logging.info("Пользователь в меню")
+        logging.info(f"Пользователь {tg_user_id} в меню")
