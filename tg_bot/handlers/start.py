@@ -53,7 +53,7 @@ async def cmd_start(message: Message, state: FSMContext):
         logging.info(f"Вся инфа про пользователя: {message.from_user}")
         await send_message(
             SERVICE_CHAT_ID,
-            f"Ошибка при создании пользователя {tg_username}: {e}"
+            f"Ошибка при создании пользователя {tg_username}: {e}, вся инфа: {message.from_user}"
         )
 
     await message.answer(MESSAGES["start"].format(tg_name))
