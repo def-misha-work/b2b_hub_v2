@@ -38,6 +38,7 @@ async def cmd_start(message: Message, state: FSMContext):
         response = await make_post_request(ENDPONT_CREATE_USER, user_dict)
         if response.status_code == 201:
             logging.info(f"Пользователь создан @{tg_username}")
+            logging.info(f"Вся инфа про пользователя: {message.from_user}")
             await send_message(
                 SERVICE_CHAT_ID, f"Новый пользователь @{tg_username}"
             )
@@ -46,8 +47,10 @@ async def cmd_start(message: Message, state: FSMContext):
             )
         else:
             logging.info(f"Пользователь не создан: {response.status_code}")
+            logging.info(f"Вся инфа про пользователя: {message.from_user}")
     except Exception as e:
         logging.info(f"Ошибка при создании пользователя {tg_username}: {e}")
+        logging.info(f"Вся инфа про пользователя: {message.from_user}")
         await send_message(
             SERVICE_CHAT_ID,
             f"Ошибка при создании пользователя {tg_username}: {e}"
