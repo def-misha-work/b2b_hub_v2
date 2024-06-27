@@ -377,11 +377,13 @@ async def invalid_values_inn_recipient(
 @router.callback_query(lambda c: c.data == 'send_apllication')
 async def create_new_apllication(update: types.CallbackQuery):
     logging.info("Отправка заявки в БД")
-    tg_username = update.message.from_user.username
+    tg_username = update.from_user.username
+    logging.info(f"Это tg_username: {tg_username}")
 
     data_dict = application_storage.to_dict()
     data_dict["inn_payer"] = company_payer_storage.company_inn
     data_dict["inn_recipient"] = company_recipient_storage.company_inn
+    logging.info(f"Это data_dict: {data_dict}")
 
     try:
         response = await make_post_request(
@@ -408,8 +410,8 @@ async def create_new_apllication(update: types.CallbackQuery):
             company_recipient_storage.company_inn
         )
         message_manager = MESSAGES_TO_MANAGER["application_created"].format(
-            update.message.from_user.first_name,
-            update.message.from_user.username,
+            update.from_user.first_name,
+            tg_username,
             application_message
         )
         message_user = MESSAGES["application_created"].format(
