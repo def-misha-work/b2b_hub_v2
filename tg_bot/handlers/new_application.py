@@ -17,6 +17,7 @@ from storage import (
     ApplicationStorage,
     CompanyPayerStorage,
     CompanyPecipientStorage,
+    UserStorage,
 )
 from utils import (
     send_message,
@@ -36,6 +37,7 @@ from constants import (
     EP_COMPANY_PAYER,
     EP_COMPANY_RECIPIENT,
     EP_APPLICATION,
+    ENDPONT_CREATE_USER,
 )
 
 
@@ -57,6 +59,33 @@ async def start_new_application(message: Message, state: FSMContext):
     """Обрабатывает клик по кнопке и запускает цепочку Новая заявка."""
     tg_username = message.from_user.username
     tg_user_id = message.from_user.id
+    # TODO костыль убрать после проверки обновления создания юзера.
+    tg_name = message.from_user.first_name
+    tg_surname = message.from_user.last_name
+    user_storage = UserStorage(tg_user_id, tg_username, tg_name, tg_surname)
+    user_dict = user_storage.to_dict()
+    try:
+        response = await make_post_request(ENDPONT_CREATE_USER, user_dict)
+        if response.status_code == 201:
+            logging.info(f"Пользователь создан @{tg_username}")
+            logging.info(f"Вся инфа про пользователя: {message.from_user}")
+            await send_message(
+                SERVICE_CHAT_ID, f"Новый пользователь @{tg_username}"
+            )
+            await send_message(
+                MANAGER_CHAT_ID, f"Новый пользователь @{tg_username}"
+            )
+        else:
+            logging.info(f"Пользователь не создан: {response.status_code}")
+            logging.info(f"Вся инфа про пользователя: {message.from_user}")
+    except Exception as e:
+        logging.info(f"Ошибка при создании пользователя {tg_username}: {e}")
+        logging.info(f"Вся инфа про пользователя: {message.from_user}")
+        await send_message(
+            SERVICE_CHAT_ID,
+            f"Ошибка при создании пользователя {tg_username}: {e}, вся инфа: {message.from_user}"
+        )
+    # конец костыля
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
     await message.answer(MESSAGES["step1"])

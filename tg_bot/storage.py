@@ -1,6 +1,6 @@
 ﻿class UserStorage():
 
-    def __init__(self, tg_id, tg_username, tg_name, tg_surname):
+    def __init__(self, tg_id, tg_username, tg_name=None, tg_surname=None):
         self.tg_id = tg_id
         self.tg_username = tg_username
         self.tg_name = tg_name

@@ -27,13 +27,11 @@ async def cmd_start(message: Message, state: FSMContext):
     tg_username = message.from_user.username
     logging.info(f"Пользователь {tg_username} запустил бота")
     await state.set_state(None)
-
-    tg_id = str(message.from_user.id)
+    tg_user_id = str(message.from_user.id)
     tg_name = message.from_user.first_name
     tg_surname = message.from_user.last_name
-    user_storage = UserStorage(tg_id, tg_username, tg_name, tg_surname)
+    user_storage = UserStorage(tg_user_id, tg_username, tg_name, tg_surname)
     user_dict = user_storage.to_dict()
-
     try:
         response = await make_post_request(ENDPONT_CREATE_USER, user_dict)
         if response.status_code == 201:

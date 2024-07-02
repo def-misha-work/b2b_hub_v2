@@ -5,12 +5,17 @@ from aiogram.types import Message
 
 from keyboards.main_menu import get_menu
 from keyboards.legal_menu import get_legal_menu
-from utils import get_company_list
+from utils import get_company_list, send_message
 from constants import (
     MESSAGES,
     EP_COMPANY_PAYER,
     EP_COMPANY_RECIPIENT,
+    ENDPONT_CREATE_USER,
+    SERVICE_CHAT_ID,
+    MANAGER_CHAT_ID,
 )
+from storage import UserStorage
+
 
 router = Router()
 
@@ -19,6 +24,35 @@ router = Router()
 async def answer_no1(message: Message):
     """Обрабатывает клик по кнопке 'мои юр. лица'."""
     logging.info("Пользователь запросил компании")
+    # TODO костыль убрать после проверки обновления создания юзера.
+    tg_user_id = message.from_user.id
+    tg_username = message.from_user.username
+    tg_name = message.from_user.first_name
+    tg_surname = message.from_user.last_name
+    user_storage = UserStorage(tg_user_id, tg_username, tg_name, tg_surname)
+    user_dict = user_storage.to_dict()
+    try:
+        response = await make_post_request(ENDPONT_CREATE_USER, user_dict)
+        if response.status_code == 201:
+            logging.info(f"Пользователь создан @{tg_username}")
+            logging.info(f"Вся инфа про пользователя: {message.from_user}")
+            await send_message(
+                SERVICE_CHAT_ID, f"Новый пользователь @{tg_username}"
+            )
+            await send_message(
+                MANAGER_CHAT_ID, f"Новый пользователь @{tg_username}"
+            )
+        else:
+            logging.info(f"Пользователь не создан: {response.status_code}")
+            logging.info(f"Вся инфа про пользователя: {message.from_user}")
+    except Exception as e:
+        logging.info(f"Ошибка при создании пользователя {tg_username}: {e}")
+        logging.info(f"Вся инфа про пользователя: {message.from_user}")
+        await send_message(
+            SERVICE_CHAT_ID,
+            f"Ошибка при создании пользователя {tg_username}: {e}, вся инфа: {message.from_user}"
+        )
+    # конец костыля
     await message.answer("Выберите категорию:", reply_markup=get_legal_menu())
 
 
