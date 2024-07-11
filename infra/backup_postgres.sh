@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 
 # Имя контейнера
 CONTAINER_NAME="infra-db-1"
@@ -13,7 +13,7 @@ BACKUP_FILE="django_backup_$(date +%Y%m%d).dump"
 sudo docker exec -t $CONTAINER_NAME pg_dump -U $DB_USER -Fc $DATABASE_NAME > $BACKUP_FILE
 
 # Копирование бекапа на хост-машину
-sudo docker cp $CONTAINER_NAME:/$BACKUP_FILE .
+# sudo docker cp $CONTAINER_NAME:/$BACKUP_FILE .
 
 # Удаление бекапа из контейнера (опционально)
-sudo docker exec -t $CONTAINER_NAME rm $BACKUP_FILE
+# sudo docker exec -t $CONTAINER_NAME rm $BACKUP_FILE
