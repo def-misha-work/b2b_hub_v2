@@ -22,7 +22,7 @@ class TelegamUsers(TimestampMixin, models.Model):
         max_length=512,
         unique=True
     )
-    tg_user_id = models.IntegerField(
+    tg_user_id = models.TextField(
         verbose_name="ID автора заявки в tg",
         unique=True
     )
