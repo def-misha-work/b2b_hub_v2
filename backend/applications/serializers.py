@@ -166,6 +166,7 @@ class ApplicationsSerializer(serializers.ModelSerializer):
             "target_date",
             "inn_payer",
             "inn_recipient",
+            "app_status",
         )
         read_only_fields = ('id',)
 
@@ -206,6 +207,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
             "tg_user_id_display",
             "inn_payer_display",
             "inn_recipient_display",
+            "app_status"
         )
         read_only_fields = ('id',)
 
