@@ -41,7 +41,8 @@ class ApplicationsAdmin(admin.ModelAdmin):
         'cost',
         'target_date',
         'inn_payer',
-        'inn_recipient'
+        'inn_recipient',
+        'app_status',
     )
     readonly_fields = ('created_at', 'updated_at')
     list_display = (

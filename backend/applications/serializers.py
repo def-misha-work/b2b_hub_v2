@@ -35,7 +35,7 @@ class CompaniesPayerSerializer(serializers.ModelSerializer):
 
 
 class CompaniesPostUpdatePayerSerializer(serializers.ModelSerializer):
-    tg_user_id = serializers.CharField(max_length=255) 
+    tg_user_id = serializers.CharField(max_length=255)
     tg_user_id_display = serializers.SerializerMethodField()
 
     class Meta:
@@ -99,7 +99,7 @@ class CompaniesRecipientSerializer(serializers.ModelSerializer):
 
 
 class CompaniesPostUpdateRecipientSerializer(serializers.ModelSerializer):
-    tg_user_id = serializers.CharField(max_length=255) 
+    tg_user_id = serializers.CharField(max_length=255)
     tg_user_id_display = serializers.SerializerMethodField()
 
     class Meta:
@@ -181,7 +181,7 @@ class ApplicationsSerializer(serializers.ModelSerializer):
 
 class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
 
-    tg_user_id = serializers.CharField(max_length=255) 
+    tg_user_id = serializers.CharField(max_length=255)
     target_date = serializers.DateField(
         format="%d.%m.%y",
         input_formats=['%d.%m.%y', '%d.%m.%Y', 'iso-8601']
