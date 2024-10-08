@@ -111,9 +111,10 @@ class CompaniesRecipient(TimestampMixin, models.Model):
 
 class Applications(TimestampMixin, models.Model):
     STATUS_CHOICES = [
-        ('new', 'Новая'),
-        ('in_progress', 'В работе'),
-        ('completed', 'Выполнена'),
+        ("Новая", "Новая"),
+        ("В работе", "В работе"),
+        ("Счёт в оплате", "Счёт в оплате"),
+        ("Выполнена", "Выполнена"),
     ]
     tg_user = models.ForeignKey(
         TelegamUsers,
@@ -143,7 +144,7 @@ class Applications(TimestampMixin, models.Model):
         verbose_name="Статус заявки",
         max_length=200,
         choices=STATUS_CHOICES,
-        default='new'
+        default="Новая"
     )
 
     class Meta:
