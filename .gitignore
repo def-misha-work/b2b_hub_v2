@@ -163,3 +163,4 @@ cython_debug/
 
 postgres
 django_backup.dump
+static

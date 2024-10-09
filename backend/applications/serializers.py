@@ -1,4 +1,8 @@
-﻿from rest_framework import serializers
+﻿import logging
+import requests
+
+from requests.exceptions import RequestException
+from rest_framework import serializers
 
 from applications.models import (
     Applications,
@@ -6,6 +10,14 @@ from applications.models import (
     CompaniesRecipient,
     TelegamUsers,
 )
+from applications.constants import (
+    URL_TG_BOT_ALERT,
+    VALID_STATUSES,
+)
+
+
+class RequestFailedException(serializers.ValidationError):
+    pass
 
 
 class TelegamUsersSerializer(serializers.ModelSerializer):
@@ -35,7 +47,7 @@ class CompaniesPayerSerializer(serializers.ModelSerializer):
 
 
 class CompaniesPostUpdatePayerSerializer(serializers.ModelSerializer):
-    tg_user_id = serializers.CharField(max_length=255) 
+    tg_user_id = serializers.CharField(max_length=255)
     tg_user_id_display = serializers.SerializerMethodField()
 
     class Meta:
@@ -99,7 +111,7 @@ class CompaniesRecipientSerializer(serializers.ModelSerializer):
 
 
 class CompaniesPostUpdateRecipientSerializer(serializers.ModelSerializer):
-    tg_user_id = serializers.CharField(max_length=255) 
+    tg_user_id = serializers.CharField(max_length=255)
     tg_user_id_display = serializers.SerializerMethodField()
 
     class Meta:
@@ -166,6 +178,7 @@ class ApplicationsSerializer(serializers.ModelSerializer):
             "target_date",
             "inn_payer",
             "inn_recipient",
+            "app_status",
         )
         read_only_fields = ('id',)
 
@@ -181,7 +194,7 @@ class ApplicationsSerializer(serializers.ModelSerializer):
 
 class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
 
-    tg_user_id = serializers.CharField(max_length=255) 
+    tg_user_id = serializers.CharField(max_length=255, write_only=True)
     target_date = serializers.DateField(
         format="%d.%m.%y",
         input_formats=['%d.%m.%y', '%d.%m.%Y', 'iso-8601']
@@ -206,6 +219,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
             "tg_user_id_display",
             "inn_payer_display",
             "inn_recipient_display",
+            "app_status"
         )
         read_only_fields = ('id',)
 
@@ -256,6 +270,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
         tg_user_id = validated_data.pop('tg_user_id', None)
         inn_payer_data = validated_data.pop('inn_payer', None)
         inn_recipient_data = validated_data.pop('inn_recipient', None)
+        app_status_data = validated_data.pop('app_status', None)
 
         if tg_user_id is not None:
             try:
@@ -286,6 +301,25 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
             except CompaniesRecipient.DoesNotExist:
                 raise serializers.ValidationError(
                     "Нет компании получателя с таким ИНН."
+                )
+        if app_status_data is not None:
+            if app_status_data not in VALID_STATUSES:
+                raise serializers.ValidationError(
+                    {"app_status": "Недопустимый статус заявки."}
+                )
+            instance.app_status = app_status_data
+            app_id = instance.id
+            params = {
+                "chat_id": instance.tg_user.tg_user_id,
+                "text": f"Заявка №{app_id} статус: {app_status_data}"
+                }
+            try:
+                response = requests.get(URL_TG_BOT_ALERT, params)
+                response.raise_for_status()
+            except RequestException as e:
+                logging.error(f"Ошибка при отправке запроса: {e}")
+                raise RequestFailedException(
+                    f"Ошибка при отправке запроса: {e}"
                 )
 
         for attr, value in validated_data.items():

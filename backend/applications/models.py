@@ -110,6 +110,12 @@ class CompaniesRecipient(TimestampMixin, models.Model):
 
 
 class Applications(TimestampMixin, models.Model):
+    STATUS_CHOICES = [
+        ("Новая", "Новая"),
+        ("В работе", "В работе"),
+        ("Счёт в оплате", "Счёт в оплате"),
+        ("Выполнена", "Выполнена"),
+    ]
     tg_user = models.ForeignKey(
         TelegamUsers,
         on_delete=models.CASCADE,
@@ -133,6 +139,12 @@ class Applications(TimestampMixin, models.Model):
         related_name="applications_as_recipient",
         on_delete=models.CASCADE,
         verbose_name="Название или ИНН плательщика",
+    )
+    app_status = models.CharField(
+        verbose_name="Статус заявки",
+        max_length=200,
+        choices=STATUS_CHOICES,
+        default="Новая"
     )
 
     class Meta:

@@ -35,15 +35,16 @@ class CompaniesRecipientAdmin(admin.ModelAdmin):
 
 class ApplicationsAdmin(admin.ModelAdmin):
     fields = (
-        'created_at',
-        'updated_at',
-        'tg_user',
-        'cost',
-        'target_date',
-        'inn_payer',
-        'inn_recipient'
+        "created_at",
+        "updated_at",
+        "tg_user",
+        "cost",
+        "target_date",
+        "inn_payer",
+        "inn_recipient",
+        "app_status",
     )
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ("created_at", "updated_at")
     list_display = (
         "id",
         "created_at",
@@ -52,10 +53,12 @@ class ApplicationsAdmin(admin.ModelAdmin):
         "target_date",
         "inn_payer",
         "inn_recipient",
+        "app_status",
     )
     list_filter = (
         "created_at",
         "tg_user",
+        "app_status",
     )
     search_fields = (
         "id",
