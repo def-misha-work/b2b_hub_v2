@@ -1,6 +1,5 @@
 # b2b_hub_v2
 
-
 ### Для переключения между версиями разаботки и прода###
 В tg_bot
 1) В .env расскоментировать соответствющие константы
@@ -40,7 +39,9 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+
 ### Запуск бота dev ###
+
 
 Создание вирт окружения
 ```bash
@@ -65,3 +66,4 @@ pip install -r requirements.txt
 ```bash
 python bot.py
 ```
+
