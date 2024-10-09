@@ -164,3 +164,4 @@ cython_debug/
 postgres
 django_backup.dump
 static
+django_backup_hand_09102024.dump
