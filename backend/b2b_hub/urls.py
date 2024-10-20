@@ -10,22 +10,24 @@ from applications.views import (
     TelegamUsersViewSet,
     CompaniesPayerViewSet,
     CompaniesRecipientViewSet,
-    ApplicationsViewSet
+    ApplicationsViewSet,
+    UploadFileViewSet,
 )
 
 router = routers.DefaultRouter()
-router.register(r"tg_users", TelegamUsersViewSet, basename='tg_user')
+router.register(r"tg_users", TelegamUsersViewSet, basename="tg_user")
+router.register(r"upload", UploadFileViewSet, basename="upload")
 router.register(
     r"companies_payer",
     CompaniesPayerViewSet,
-    basename='companies_payer'
+    basename="companies_payer"
 )
 router.register(
     r"companies_recipient",
     CompaniesRecipientViewSet,
-    basename='companies_recipient'
+    basename="companies_recipient"
 )
-router.register(r"applications", ApplicationsViewSet, basename='applications')
+router.register(r"applications", ApplicationsViewSet, basename="applications")
 
 schema_view = get_schema_view(
     openapi.Info(

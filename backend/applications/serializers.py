@@ -315,10 +315,6 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
                 instance.id,
                 instance.cost,
                 instance.target_date,
-                # instance.name_payer,
-                # instance.inn_payer,
-                # instance.name_recipient,
-                # instance.inn_recipient
             )
             params = {
                 "chat_id": instance.tg_user.tg_user_id,

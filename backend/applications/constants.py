@@ -6,12 +6,14 @@ load_dotenv()
 
 TG_DOMAIN = "https://api.telegram.org/"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-URL_TG_BOT_ALERT = TG_DOMAIN + "bot" + BOT_TOKEN + "/sendMessage"
+BOT = "bot"
+URL_TG_BOT_ALERT = TG_DOMAIN + BOT + BOT_TOKEN + "/sendMessage"
+URL_SEND_FILE = TG_DOMAIN + BOT + BOT_TOKEN + "/sendDocument"
 VALID_STATUSES = ["Новая", "В работе", "Счёт в оплате", "Выполнена"]
 
 
 APPLICATION_MESSAGE = """
-Уведомление, поменялся статус заявки!
+B2b-hub: изменился статус вашей заявки.
 
 Статус заявки: {},
 Номер заявки: {},
