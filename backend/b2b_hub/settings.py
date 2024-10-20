@@ -16,7 +16,7 @@ ALLOWED_HOSTS = ["backend", "192.168.0.20", "158.160.38.73", "localhost", "127.0
 # ALLOWED_HOSTS = ["*"]
 
 # CSRF_TRUSTED_ORIGINS = ["http://192.168.0.20:8000", "http://backend", "http://*", "https://*"]
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://192.168.0.20:8000", "http://158.160.38.73:8000"]
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://192.168.0.20:8000", "http://158.160.38.73:8000", "backend", "localhost", "127.0.0.1"]
 
 
 AUTH_USER_MODEL = "users.CustomUser"
