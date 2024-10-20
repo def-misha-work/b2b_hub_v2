@@ -6,10 +6,10 @@
 TELEGRAM_TOKEN
 SERVICE_TELEGRAM_TOKEN
 MANAGER_CHAT_ID
+DOMANE_NAME
 2) В .env поменять юзера джанги для авторизации
 BASIC_USER_LOGIN=1@1.ru
 BASIC_USER_PASSWORD=1
-3) В constants.py поменять DOMANE_NAME на локальную или прод версию.
 
 В бекэнд
 1) Поменять токен бота в .env

@@ -13,6 +13,7 @@ from applications.models import (
 from applications.constants import (
     URL_TG_BOT_ALERT,
     VALID_STATUSES,
+    APPLICATION_MESSAGE,
 )
 
 
@@ -308,10 +309,16 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
                     {"app_status": "Недопустимый статус заявки."}
                 )
             instance.app_status = app_status_data
-            app_id = instance.id
+            # app_id = instance.id
+            text = APPLICATION_MESSAGE.format(
+                instance.app_status,
+                instance.id,
+                instance.cost,
+                instance.target_date,
+            )
             params = {
                 "chat_id": instance.tg_user.tg_user_id,
-                "text": f"Заявка №{app_id} статус: {app_status_data}"
+                "text": text
                 }
             try:
                 response = requests.get(URL_TG_BOT_ALERT, params)
