@@ -9,11 +9,9 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 SERVICE_TELEGRAM_TOKEN = os.getenv("SERVICE_TELEGRAM_TOKEN")
 SERVICE_CHAT_ID = os.getenv("SERVICE_CHAT_ID")
 MANAGER_CHAT_ID = os.getenv("MANAGER_CHAT_ID")
+DOMANE_NAME = os.getenv("DOMANE_NAME")
 
 # Работа с эндпоинтами джанго
-# прод для докера
-DOMANE_NAME = "http://backend:8000/"
-# DOMANE_NAME = "http://127.0.0.1:8000/"
 ENDPONT_CREATE_USER = DOMANE_NAME + "api/v1/tg_users/"
 # Payer
 EP_COMPANY_PAYER = DOMANE_NAME + "api/v1/companies_payer/"
