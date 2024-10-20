@@ -11,9 +11,9 @@ from applications.models import (
     TelegamUsers,
 )
 from applications.constants import (
-    URL_TG_BOT_ALERT,
+    URL_TG_SEND_MESSAGE,
     VALID_STATUSES,
-    APPLICATION_MESSAGE,
+    NEW_STATUS_MESSAGE,
 )
 
 
@@ -309,8 +309,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
                     {"app_status": "Недопустимый статус заявки."}
                 )
             instance.app_status = app_status_data
-            # app_id = instance.id
-            text = APPLICATION_MESSAGE.format(
+            text = NEW_STATUS_MESSAGE.format(
                 instance.app_status,
                 instance.id,
                 instance.cost,
@@ -321,7 +320,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
                 "text": text
                 }
             try:
-                response = requests.get(URL_TG_BOT_ALERT, params)
+                response = requests.get(URL_TG_SEND_MESSAGE, params)
                 response.raise_for_status()
             except RequestException as e:
                 logging.error(f"Ошибка при отправке запроса: {e}")

@@ -21,7 +21,11 @@ from applications.models import (
     CompaniesRecipient,
     TelegamUsers,
 )
-from applications.constants import URL_SEND_FILE
+from applications.constants import (
+    URL_TG_SEND_MESSAGE,
+    URL_SEND_FILE,
+    NEW_DOC_MESSAGE,
+)
 
 
 class TelegamUsersViewSet(viewsets.ModelViewSet):
@@ -141,10 +145,11 @@ class UploadFileViewSet(viewsets.ViewSet):
     def create(self, request):
         file_obj = request.FILES.get("file")
         tg_user_id = request.data.get("tg_user_id")
+        app_id = request.data.get("app_id")
 
-        if not tg_user_id:
+        if not tg_user_id or not app_id:
             return Response(
-                {"error": "There is no user with this ID"},
+                {"error": "No field tg_user_id or app_id"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         if not file_obj:
@@ -152,14 +157,28 @@ class UploadFileViewSet(viewsets.ViewSet):
                 {"error": "No file"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        # TODO добавить try except и запись логов в файл (?)
+        # print(URL_TG_SEND_MESSAGE)
+        text = NEW_DOC_MESSAGE.format(
+            app_id,
+            file_obj.name
+        )
+        params = {
+                "chat_id": tg_user_id,
+                "text": text
+                }
+        # logging.info(text)
+        response = requests.get(URL_TG_SEND_MESSAGE, params)
+        # logging.info(response.status_code)
+        # logging.info(response.text)
 
         url = URL_SEND_FILE + f"?chat_id={tg_user_id}"
-        logging.info(url)
+        # logging.info(url)
         files = {"document": (file_obj.name, file_obj.read())}
-        response = requests.post(url, files=files)
-        logging.info(response.status_code)
-        logging.info(response.text)
 
+        response = requests.post(url, files=files)
+        # logging.info(response.status_code)
+        # logging.info(response.text)
         if response.status_code == 200:
             return Response(
                 {"message": "File uploaded successfully"},
