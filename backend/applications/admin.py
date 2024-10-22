@@ -1,10 +1,18 @@
-from django.contrib import admin
+import logging
+import requests
+
+from django.contrib import admin, messages
+from requests.exceptions import RequestException
 
 from applications.models import (
     TelegamUsers,
     CompaniesPayer,
     CompaniesRecipient,
     Applications,
+)
+from applications.constants import (
+    URL_TG_SEND_MESSAGE,
+    NEW_STATUS_MESSAGE
 )
 
 
@@ -71,6 +79,33 @@ class ApplicationsAdmin(admin.ModelAdmin):
         "inn_recipient__company_inn_recipient",
     )
     ordering = ("created_at",)
+
+    def save_model(self, request, instance, form, change):
+        old_app_status = None
+        if change:
+            old_app_status = Applications.objects.get(
+                pk=instance.pk
+            ).app_status
+        super().save_model(request, instance, form, change)
+
+        if old_app_status != instance.app_status:
+            text = NEW_STATUS_MESSAGE.format(
+                instance.app_status,
+                instance.id,
+                instance.cost,
+                instance.target_date,
+            )
+            params = {
+                "chat_id": instance.tg_user.tg_user_id,
+                "text": text
+                }
+            try:
+                response = requests.get(URL_TG_SEND_MESSAGE, params)
+                response.raise_for_status()
+            except RequestException as e:
+                logging.error(f"Ошибка при отправке запроса: {e}")
+                messages.error(request, f"Ошибка при отправке запроса: {e}")
+                return None
 
 
 admin.site.register(TelegamUsers, TelegamUsersAdmin)
