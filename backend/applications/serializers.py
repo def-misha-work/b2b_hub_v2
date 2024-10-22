@@ -309,6 +309,7 @@ class ApplicationsPostUpdateSerializer(serializers.ModelSerializer):
                     {"app_status": "Недопустимый статус заявки."}
                 )
             instance.app_status = app_status_data
+
             text = NEW_STATUS_MESSAGE.format(
                 instance.app_status,
                 instance.id,

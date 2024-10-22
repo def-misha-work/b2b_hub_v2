@@ -156,6 +156,7 @@ class UploadFileViewSet(viewsets.ViewSet):
                 {"error": "No file"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
         params = {
             "chat_id": tg_user_id,
             "text": NEW_DOC_MESSAGE.format(app_id, file_obj.name)
