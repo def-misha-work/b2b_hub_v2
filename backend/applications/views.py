@@ -1,5 +1,4 @@
 import requests
-import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters, status
@@ -157,35 +156,42 @@ class UploadFileViewSet(viewsets.ViewSet):
                 {"error": "No file"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        # TODO добавить try except и запись логов в файл (?)
-        # print(URL_TG_SEND_MESSAGE)
-        text = NEW_DOC_MESSAGE.format(
-            app_id,
-            file_obj.name
-        )
         params = {
-                "chat_id": tg_user_id,
-                "text": text
-                }
-        # logging.info(text)
-        response = requests.get(URL_TG_SEND_MESSAGE, params)
-        # logging.info(response.status_code)
-        # logging.info(response.text)
-
-        url = URL_SEND_FILE + f"?chat_id={tg_user_id}"
-        # logging.info(url)
-        files = {"document": (file_obj.name, file_obj.read())}
-
-        response = requests.post(url, files=files)
-        # logging.info(response.status_code)
-        # logging.info(response.text)
-        if response.status_code == 200:
+            "chat_id": tg_user_id,
+            "text": NEW_DOC_MESSAGE.format(app_id, file_obj.name)
+        }
+        try:
+            response = requests.get(URL_TG_SEND_MESSAGE, params)
+            response.raise_for_status()
+        except requests.HTTPError as e:
             return Response(
-                {"message": "File uploaded successfully"},
-                status=status.HTTP_200_OK
+                {"error": f"Failed to send message: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
             )
-        else:
+        except requests.RequestException as e:
             return Response(
-                {"error": "Failed to upload file"},
+                {"error": f"Network error: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+        url = URL_SEND_FILE + f"?chat_id={tg_user_id}"
+        files = {"document": (file_obj.name, file_obj.read())}
+
+        try:
+            response = requests.post(url, files=files)
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            return Response(
+                {"error": f"Failed to upload file: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except requests.RequestException as e:
+            return Response(
+                {"error": f"Network error: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(
+            {"message": "File uploaded successfully"},
+            status=status.HTTP_200_OK
+        )
