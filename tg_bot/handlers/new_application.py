@@ -230,6 +230,14 @@ async def invalid_values_inn_recipient(
 async def get_application_cost(message: types.Message, state: FSMContext):
     """Обработка сообщения с суммой заявки."""
     application_cost = int(message.text)
+
+    if application_cost < 100000:
+        await message.answer("Сумма заявки должна быть от 100000!")
+        await message.answer(MESSAGES["step3"])
+        await state.set_state(NewApplication.step_3)
+        logging.info("Ошибка на шаге 3: сумма меньше 100000")
+        return None
+
     application_storage.update_application_cost(application_cost)
     await message.answer(f"Вы ввели сумму заявки: {application_cost}")
     await message.answer(MESSAGES["step4"])
