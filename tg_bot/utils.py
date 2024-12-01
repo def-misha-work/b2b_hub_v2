@@ -1,6 +1,7 @@
 ﻿import json
 import logging
 
+from datetime import datetime, timedelta
 from aiogram import Bot, types
 from constants import (
     SERVICE_TELEGRAM_TOKEN,
@@ -18,6 +19,17 @@ from requests import (
 
 
 service_bot = Bot(token=SERVICE_TELEGRAM_TOKEN)
+
+
+async def get_date(target_date):
+    current_date = datetime.now().date()
+    if target_date == "today":
+        date_to_return = current_date
+    if target_date == "tomorrow":
+        date_to_return = current_date + timedelta(days=1)
+    if target_date == "day_after_tomorrow":
+        date_to_return = current_date + timedelta(days=2)
+    return date_to_return.strftime("%d.%m.%Y")
 
 
 async def send_message(user_id, text):
