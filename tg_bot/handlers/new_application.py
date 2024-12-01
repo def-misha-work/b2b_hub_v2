@@ -252,7 +252,7 @@ async def invalid_values_application_cost(
     message: types.Message,
     state: FSMContext
 ):
-    """Валидация сообщения с суммаой заявки."""
+    """Валидация сообщения с суммой заявки."""
     await message.answer("Внимание! Сумма должна быть числом!")
     await message.answer(MESSAGES["step3"])
     await state.set_state(NewApplication.step_3)
