@@ -157,7 +157,7 @@ class UploadFileViewSet(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         # определяем какое сообщение отправляем
-        if message == 1:
+        if message == "update":
             text = UPDATE_DOC_MESSAGE
         else:
             text = NEW_DOC_MESSAGE
