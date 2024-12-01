@@ -9,6 +9,7 @@ from aiogram.fsm.context import FSMContext
 
 from keyboards.main_menu import get_menu
 from keyboards.company_menu import get_company_menu
+from keyboards.date_fields_menu import get_date_menu
 
 from requests import (
     make_post_request,
@@ -27,6 +28,7 @@ from utils import (
     get_answer_function,
     get_company_name_from_dadata,
     update_company_in_database,
+    get_date,
 )
 from validators import validate_date
 from constants import (
@@ -240,7 +242,7 @@ async def get_application_cost(message: types.Message, state: FSMContext):
 
     application_storage.update_application_cost(application_cost)
     await message.answer(f"Вы ввели сумму заявки: {application_cost}")
-    await message.answer(MESSAGES["step4"])
+    await message.answer(MESSAGES["step4"], reply_markup=get_date_menu())
     await state.set_state(NewApplication.step_4)
     logging.info("Успех шаг 3")
 
@@ -257,68 +259,98 @@ async def invalid_values_application_cost(
     logging.info("Ошибка на шаге 3")
 
 
-# Обработка target_date step_4
+# Обработка target_date step_4 (Кнопка)
+@router.callback_query(StateFilter(NewApplication.step_4))
+async def get_target_date_buttons(
+    update: types.CallbackQuery,
+    state: FSMContext
+):
+    target_date = await get_date(update.data)
+    tg_user_id = update.from_user.id
+    logging.info(f"Это TG_ID: {tg_user_id}")
+    await step_four(update.message, state, target_date, tg_user_id)
+
+
+# Обработка target_date step_4 (Сообщение)
 @router.message(
     lambda message: validate_date(message.text),
     NewApplication.step_4
 )
 async def get_target_date(message: types.Message, state: FSMContext):
     """Обработка сообщения с датой в формате 20.10.25."""
-    tg_username = message.from_user.username
-    application_id = False
+    target_date = message.text
+    tg_user_id = message.from_user.id
+    logging.info(f"Это TG_ID: {tg_user_id}")
+    await step_four(message, state, target_date, tg_user_id)
 
-    application_storage.update_tg_id(message.from_user.id)
-    application_storage.update_target_date(message.text)
-    data_dict = application_storage.to_dict()
-    data_dict["inn_payer"] = company_payer_storage.company_inn
-    data_dict["inn_recipient"] = company_recipient_storage.company_inn
 
-    # сохраняем в бд
-    try:
-        response = await make_post_request(
-            EP_APPLICATION, data_dict
-        )
-        data = json.loads(response.text)
-        application_id = data["id"]
-    except Exception as e:
-        logging.info(f"Ошибка при создании заявки: {e}")
-        await send_message(SERVICE_CHAT_ID, f"Ошибка создания заявки {e}")
-        await message.answer(TECH_MESSAGES["api_error"])
+async def step_four(message: types.Message, state: FSMContext, target_date, tg_user_id):
+    """Основаня логика шага 4 создания заявки."""
+    logging.info(f"target_date: {target_date}")
+    data_dict = await create_data_dict(message, target_date, tg_user_id)
+    # сохраняем в бд, получаем id заявки
+    application_id = await save_in_db(data_dict, message)
+    if not application_id:
         await state.set_state(None)
-        await message.answer(MESSAGES["menu"], reply_markup=get_menu())
-        logging.info(f"Пользователь {tg_username} в меню")
+        return None
 
-    # Отправляем в саппорт и менеджеру
-    if application_id:
-        application_message = MESSAGES["application"].format(
-            application_id,
-            application_storage.application_cost,
-            application_storage.target_date,
-            company_payer_storage.company_name,
-            company_payer_storage.company_inn,
-            company_recipient_storage.company_name,
-            company_recipient_storage.company_inn
-        )
-        message_manager = MESSAGES_TO_MANAGER["application_created"].format(
-            message.from_user.first_name,
-            message.from_user.username,
-            application_message
-        )
-        message_user = MESSAGES["application_created"].format(
-            application_message
-        )
-        await send_message(SERVICE_CHAT_ID, message_manager)
-        await send_message(MANAGER_CHAT_ID, message_manager)
-
-        await message.answer(message_user)
+    # отправляем сообщение менеджеру, саппорту и пользователю
+    await send_notifications(application_id, message)
 
     application_storage.clear_data()
     company_payer_storage.clear_data()
     company_recipient_storage.clear_data()
     await state.set_state(None)
     await message.answer(MESSAGES["menu"], reply_markup=get_menu())
-    logging.info(f"Пользователь {tg_username} в меню")
     logging.info("Успех шаг 4")
+
+
+async def create_data_dict(message, target_date, tg_user_id):
+    application_storage.update_tg_id(tg_user_id)
+    application_storage.update_target_date(target_date)
+    data_dict = application_storage.to_dict()
+    data_dict["inn_payer"] = company_payer_storage.company_inn
+    data_dict["inn_recipient"] = company_recipient_storage.company_inn
+    return data_dict
+
+
+async def save_in_db(data_dict, message):
+    logging.info(f"Отправляемые данные: {data_dict}")
+    try:
+        response = await make_post_request(
+            EP_APPLICATION, data_dict
+        )
+        data = json.loads(response.text)
+        return data["id"]
+    except Exception as e:
+        logging.info(f"Ошибка при создании заявки: {e}")
+        await send_message(SERVICE_CHAT_ID, f"Ошибка создания заявки {e}")
+        await message.answer(TECH_MESSAGES["api_error"])
+        await message.answer(MESSAGES["menu"], reply_markup=get_menu())
+        return False
+
+
+async def send_notifications(application_id, message):
+    application_message = MESSAGES["application"].format(
+        application_id,
+        application_storage.application_cost,
+        application_storage.target_date,
+        company_payer_storage.company_name,
+        company_payer_storage.company_inn,
+        company_recipient_storage.company_name,
+        company_recipient_storage.company_inn
+    )
+    message_manager = MESSAGES_TO_MANAGER["application_created"].format(
+        message.from_user.first_name,
+        message.from_user.username,
+        application_message
+    )
+    message_user = MESSAGES["application_created"].format(
+        application_message
+    )
+    await send_message(SERVICE_CHAT_ID, message_manager)
+    await send_message(MANAGER_CHAT_ID, message_manager)
+    await message.answer(message_user)
 
 
 @router.message(F.text, NewApplication.step_4)
