@@ -66,6 +66,8 @@ async def start_new_application(message: Message, state: FSMContext):
     tg_surname = message.from_user.last_name
     user_storage = UserStorage(tg_user_id, tg_username, tg_name, tg_surname)
     user_dict = user_storage.to_dict()
+    # state добавил как косыль для сохранения имени юзера
+    await state.update_data(user_first_name=tg_name, user_username=tg_username)
     try:
         response = await make_get_request(ENDPONT_CREATE_USER, tg_user_id)
         if response.status_code == 200:
@@ -295,7 +297,7 @@ async def step_four(message: types.Message, state: FSMContext, target_date, tg_u
         return None
 
     # отправляем сообщение менеджеру, саппорту и пользователю
-    await send_notifications(application_id, message)
+    await send_notifications(application_id, message, state)
 
     application_storage.clear_data()
     company_payer_storage.clear_data()
@@ -330,7 +332,8 @@ async def save_in_db(data_dict, message):
         return False
 
 
-async def send_notifications(application_id, message):
+async def send_notifications(application_id, message, state):
+    # state добавил как косыль для сохранения имени юзера
     application_message = MESSAGES["application"].format(
         application_id,
         application_storage.application_cost,
@@ -340,9 +343,12 @@ async def send_notifications(application_id, message):
         company_recipient_storage.company_name,
         company_recipient_storage.company_inn
     )
+    user_data = await state.get_data()
+    first_name = user_data.get('user_first_name')
+    username = user_data.get('user_username')
     message_manager = MESSAGES_TO_MANAGER["application_created"].format(
-        message.from_user.first_name,
-        message.from_user.username,
+        first_name,
+        username,
         application_message
     )
     message_user = MESSAGES["application_created"].format(
