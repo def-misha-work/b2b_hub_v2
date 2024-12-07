@@ -42,8 +42,8 @@ class TelegamUsers(TimestampMixin, models.Model):
     )
 
     class Meta:
-        verbose_name = "Автор заявки в tg"
-        verbose_name_plural = "Авторы заявкок в tg"
+        verbose_name = "Клиенты"
+        verbose_name_plural = "Клиенты"
 
     def __str__(self):
         return self.tg_username
@@ -62,8 +62,8 @@ class TelegramGroup(models.Model):
     )
 
     class Meta:
-        verbose_name = "Группа для рассылок в tg"
-        verbose_name_plural = "Группы для рассылок в tg"
+        verbose_name = "Группы клиентов"
+        verbose_name_plural = "Группы клиентов"
 
     def __str__(self):
         return self.name
@@ -78,11 +78,58 @@ class MessageTemplate(models.Model):
     )
 
     class Meta:
-        verbose_name = "Шаблоны для отправки в tg"
-        verbose_name_plural = "Шаблоны для отправки в tg"
+        verbose_name = "Рассылки"
+        verbose_name_plural = "Рассылки"
 
     def __str__(self):
         return self.title
+
+
+class MessageLog(models.Model):
+    template = models.ForeignKey(
+        MessageTemplate,
+        on_delete=models.CASCADE,
+        related_name='logs'
+    )
+    group = models.ForeignKey(
+        TelegramGroup,
+        on_delete=models.CASCADE,
+        related_name='logs'
+    )
+    status_code = models.IntegerField()
+    success = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "История рассылок"
+        verbose_name_plural = "История рассылок"
+
+    def __str__(self):
+        log_message = (
+            f"Log for {self.template.title} "
+            f"to {self.group.name} "
+            f"at {self.timestamp}"
+        )
+        return log_message
+
+
+class UserMessageLog(models.Model):
+    message_log = models.ForeignKey(
+        MessageLog,
+        on_delete=models.CASCADE,
+        related_name='user_logs'
+    )
+    user = models.ForeignKey(
+        TelegamUsers,
+        on_delete=models.CASCADE,
+        related_name='message_logs'
+    )
+    status_code = models.IntegerField()
+    success = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Log for {self.user.name} at {self.timestamp}"
 
 
 class CompaniesPayer(TimestampMixin, models.Model):

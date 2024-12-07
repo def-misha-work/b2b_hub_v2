@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TG_DOMAIN = "https://api.telegram.org/"
-BOT_TOKEN = os.getenv("SERVICE_TELEGRAM_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 BOT = "bot"
 URL_TG_SEND_MESSAGE = TG_DOMAIN + BOT + BOT_TOKEN + "/sendMessage"
 URL_SEND_FILE = TG_DOMAIN + BOT + BOT_TOKEN + "/sendDocument"

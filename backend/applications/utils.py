@@ -12,10 +12,10 @@ def send_message_to_user(chat_id, message):
         'parse_mode': 'HTML',
     }
     response = requests.post(url, json=payload)
-    return response.json()
+    return response
 
 
 def send_message_to_group(group_id, message):
     group = TelegramGroup.objects.get(id=group_id)
-    for user in group.users.all():
-        send_message_to_user(user.tg_user_id, message)
+    arguments = [(user.tg_user_id, message) for user in group.users.all()]
+    return arguments
