@@ -49,6 +49,42 @@ class TelegamUsers(TimestampMixin, models.Model):
         return self.tg_username
 
 
+class TelegramGroup(models.Model):
+    name = models.CharField(
+        max_length=255,
+        unique=True,
+        verbose_name="Название группы"
+    )
+    users = models.ManyToManyField(
+        TelegamUsers,
+        related_name='groups',
+        verbose_name="Пользователи"
+    )
+
+    class Meta:
+        verbose_name = "Группа для рассылок в tg"
+        verbose_name_plural = "Группы для рассылок в tg"
+
+    def __str__(self):
+        return self.name
+
+
+class MessageTemplate(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    groups = models.ManyToManyField(
+        TelegramGroup,
+        related_name='message_templates'
+    )
+
+    class Meta:
+        verbose_name = "Шаблоны для отправки в tg"
+        verbose_name_plural = "Шаблоны для отправки в tg"
+
+    def __str__(self):
+        return self.title
+
+
 class CompaniesPayer(TimestampMixin, models.Model):
     tg_user = models.ForeignKey(
         TelegamUsers,
