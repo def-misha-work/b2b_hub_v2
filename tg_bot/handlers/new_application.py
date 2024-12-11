@@ -95,7 +95,8 @@ async def start_new_application(message: Message, state: FSMContext):
             logging.info(f"Вся инфа про пользователя: {message.from_user}")
             await send_message(
                 SERVICE_CHAT_ID,
-                f"Ошибка при создании пользователя {tg_username}: {e}, вся инфа: {message.from_user}"
+                f"Ошибка при создании пользователя {tg_username}: ",
+                f"{e}, вся инфа: {message.from_user}"
             )
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
@@ -286,7 +287,12 @@ async def get_target_date(message: types.Message, state: FSMContext):
     await step_four(message, state, target_date, tg_user_id)
 
 
-async def step_four(message: types.Message, state: FSMContext, target_date, tg_user_id):
+async def step_four(
+    message: types.Message,
+    state: FSMContext,
+    target_date,
+    tg_user_id
+):
     """Основаня логика шага 4 создания заявки."""
     logging.info(f"target_date: {target_date}")
     data_dict = await create_data_dict(message, target_date, tg_user_id)
