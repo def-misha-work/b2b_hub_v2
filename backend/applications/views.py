@@ -175,11 +175,13 @@ class UploadFileViewSet(viewsets.ViewSet):
                 {"error": f"Failed to send message: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
         except requests.RequestException as e:
             return Response(
                 {"error": f"Network error: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
         # отправляем файл
         file_data = base64.b64decode(file_body)
         with open(file_name, 'wb') as temp_file:
@@ -203,6 +205,7 @@ class UploadFileViewSet(viewsets.ViewSet):
                 )
         # удаляем временно созданый файл
         os.remove(file_name)
+
         return Response(
             {"message": "File uploaded successfully"},
             status=status.HTTP_200_OK
