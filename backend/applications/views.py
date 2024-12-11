@@ -1,3 +1,5 @@
+import os
+import base64
 import requests
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -24,6 +26,7 @@ from applications.constants import (
     URL_TG_SEND_MESSAGE,
     URL_SEND_FILE,
     NEW_DOC_MESSAGE,
+    UPDATE_DOC_MESSAGE,
 )
 
 
@@ -142,24 +145,27 @@ class ApplicationsViewSet(viewsets.ModelViewSet):
 
 class UploadFileViewSet(viewsets.ViewSet):
     def create(self, request):
-        file_obj = request.FILES.get("file")
         tg_user_id = request.data.get("tg_user_id")
         app_id = request.data.get("app_id")
+        file_body = request.data.get("file_body")
+        file_name = request.data.get("file_name")
+        message = request.data.get("message")
 
-        if not tg_user_id or not app_id:
+        if not all([tg_user_id, app_id, file_body, file_name, message]):
             return Response(
-                {"error": "No field tg_user_id or app_id"},
+                {"error": "No any fields"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        if not file_obj:
-            return Response(
-                {"error": "No file"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
+        # определяем какое сообщение отправляем
+        if message == "update":
+            text = UPDATE_DOC_MESSAGE
+        else:
+            text = NEW_DOC_MESSAGE
+        # Отправляем сообщение
         params = {
             "chat_id": tg_user_id,
-            "text": NEW_DOC_MESSAGE.format(app_id, file_obj.name)
+            "text": text.format(app_id, file_name),
+            "parse_mode": "HTML"
         }
         try:
             response = requests.get(URL_TG_SEND_MESSAGE, params)
@@ -169,28 +175,36 @@ class UploadFileViewSet(viewsets.ViewSet):
                 {"error": f"Failed to send message: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
         except requests.RequestException as e:
             return Response(
                 {"error": f"Network error: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        url = URL_SEND_FILE + f"?chat_id={tg_user_id}"
-        files = {"document": (file_obj.name, file_obj.read())}
+        # отправляем файл
+        file_data = base64.b64decode(file_body)
+        with open(file_name, 'wb') as temp_file:
+            temp_file.write(file_data)
 
-        try:
-            response = requests.post(url, files=files)
-            response.raise_for_status()
-        except requests.HTTPError as e:
-            return Response(
-                {"error": f"Failed to upload file: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except requests.RequestException as e:
-            return Response(
-                {"error": f"Network error: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        with open(file_name, 'rb') as file_to_send:
+            url = URL_SEND_FILE + f"?chat_id={tg_user_id}"
+            files = {'document': file_to_send}
+            try:
+                response = requests.post(url, files=files)
+                response.raise_for_status()
+            except requests.HTTPError as e:
+                return Response(
+                    {"error": f"Failed to upload file: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except requests.RequestException as e:
+                return Response(
+                    {"error": f"Network error: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        # удаляем временно созданый файл
+        os.remove(file_name)
 
         return Response(
             {"message": "File uploaded successfully"},

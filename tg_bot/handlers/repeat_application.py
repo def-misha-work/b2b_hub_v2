@@ -16,6 +16,7 @@ from storage import (
 from keyboards.main_menu import get_menu
 from keyboards.company_menu import get_company_menu
 from keyboards.application_fields_menu import get_application_fields_menu
+from keyboards.date_fields_menu import get_date_menu
 from requests import make_post_request
 from utils import (
     send_message,
@@ -26,6 +27,7 @@ from utils import (
     get_answer_function,
     get_company_name_from_dadata,
     update_company_in_database,
+    get_date,
 )
 from validators import validate_date
 from constants import (
@@ -174,8 +176,19 @@ async def get_new_cost(update: types.CallbackQuery, state: FSMContext):
     NewCost.edit_cost
 )
 async def edit_cost(message: types.Message, state: FSMContext):
-    logging.info("Сумма заявки отредактирована")
     application_cost = int(message.text)
+
+    if application_cost < 100000:
+        await message.answer("Сумма заявки должна быть от 100000!")
+        await state.set_state(None)
+        await message.answer(
+            "Отредактируйте или отправьте заявку",
+            reply_markup=get_application_fields_menu()
+        )
+        logging.info("Ошибка редактирования, сумма меньше 100000")
+        return None
+
+    logging.info("Сумма заявки отредактирована")
     application_storage.update_application_cost(application_cost)
     await message.answer(f"Вы ввели сумму заявки: {application_cost}")
     await print_apllication(message.answer)
@@ -202,10 +215,31 @@ async def get_new_target_data(update: types.CallbackQuery, state: FSMContext):
     logging.info("Редактирование даты")
     await state.set_state(NewTagetDate.edit_date)
     await update.message.answer(
-        "Введите дату в формате: 20.10.25, не ранее текущего дня."
+        "Введите дату в формате: 20.10.25, не ранее текущего дня.",
+        reply_markup=get_date_menu()
+    )
+
+# Обработка target_date step_4 (Кнопка)
+@router.callback_query(
+    lambda c: c.data in ["today", "tomorrow", "day_after_tomorrow"]
+)
+async def get_target_date_buttons(
+    update: types.CallbackQuery,
+    state: FSMContext
+):
+    logging.info("Дата заявки отредактирована")
+    target_date = await get_date(update.data)
+    application_storage.update_target_date(target_date)
+    await update.message.answer(f"Вы ввели новую дату: {update.data}")
+    await print_apllication(update.message.answer)
+    await state.set_state(None)
+    await update.message.answer(
+        "Отредактируйте или отправьте заявку",
+        reply_markup=get_application_fields_menu()
     )
 
 
+# Обработка target_date step_4 (Сообщение)
 @router.message(
     lambda message: validate_date(message.text),
     NewTagetDate.edit_date
