@@ -176,8 +176,19 @@ async def get_new_cost(update: types.CallbackQuery, state: FSMContext):
     NewCost.edit_cost
 )
 async def edit_cost(message: types.Message, state: FSMContext):
-    logging.info("Сумма заявки отредактирована")
     application_cost = int(message.text)
+
+    if application_cost < 100000:
+        await message.answer("Сумма заявки должна быть от 100000!")
+        await state.set_state(None)
+        await message.answer(
+            "Отредактируйте или отправьте заявку",
+            reply_markup=get_application_fields_menu()
+        )
+        logging.info("Ошибка редактирования, сумма меньше 100000")
+        return None
+
+    logging.info("Сумма заявки отредактирована")
     application_storage.update_application_cost(application_cost)
     await message.answer(f"Вы ввели сумму заявки: {application_cost}")
     await print_apllication(message.answer)
