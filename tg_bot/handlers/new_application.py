@@ -93,11 +93,11 @@ async def start_new_application(message: Message, state: FSMContext):
                 f"Ошибка при создании пользователя {tg_username}: {e}"
             )
             logging.info(f"Вся инфа про пользователя: {message.from_user}")
-            await send_message(
-                SERVICE_CHAT_ID,
-                f"Ошибка при создании пользователя {tg_username}: ",
-                f"{e}, вся инфа: {message.from_user}"
+            error_text = (
+                f"Ошибка при создании пользователя {tg_username}: {e}, "
+                f"вся инфа: {message.from_user}"
             )
+            await send_message(SERVICE_CHAT_ID, error_text)
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
     await message.answer(MESSAGES["step1"])

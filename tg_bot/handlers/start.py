@@ -49,11 +49,11 @@ async def cmd_start(message: Message, state: FSMContext):
     except Exception as e:
         logging.info(f"Ошибка при создании пользователя {tg_username}: {e}")
         logging.info(f"Вся инфа про пользователя: {message.from_user}")
-        await send_message(
-            SERVICE_CHAT_ID,
-            f"Ошибка при создании пользователя {tg_username}: {e}, вся инфа: {message.from_user}"
-        )
-
+        error_text = (
+                f"Ошибка при создании пользователя {tg_username}: {e}, "
+                f"вся инфа: {message.from_user}"
+            )
+        await send_message(SERVICE_CHAT_ID, error_text)
     await message.answer(MESSAGES["start"].format(tg_name))
     await message.answer(MESSAGES["menu"], reply_markup=get_menu())
     logging.info(f"Пользователь {tg_username} в меню")
