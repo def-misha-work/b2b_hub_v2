@@ -3,6 +3,7 @@ import logging
 
 from datetime import datetime, timedelta
 from aiogram import Bot, types
+from typing import Dict
 from constants import (
     SERVICE_TELEGRAM_TOKEN,
     SERVICE_CHAT_ID,
@@ -71,6 +72,13 @@ async def get_company_list(
             company_meny.append(company[company_inn])
             await answer_func(f"{company_text}")
         return company_meny
+
+
+async def new_get_company_list(tg_user_id, endpoint,) -> Dict[str, str]:
+    value = GET_PARAM_USER + str(tg_user_id)
+    response = await make_get_request(endpoint, value)
+    company_list = json.loads(response.text)
+    return company_list
 
 
 async def extract_inn_from_update(update: types.Message | types.CallbackQuery):

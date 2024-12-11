@@ -24,6 +24,7 @@ from storage import (
 from utils import (
     send_message,
     get_company_list,
+    new_get_company_list,
     extract_inn_from_update,
     get_answer_function,
     get_company_name_from_dadata,
@@ -101,19 +102,33 @@ async def start_new_application(message: Message, state: FSMContext):
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
     await message.answer(MESSAGES["step1"])
-    company_menu = await get_company_list(
-        message.answer,
-        tg_username,
-        tg_user_id,
-        EP_COMPANY_PAYER,
-        "company_name_payer",
-        "company_inn_payer",
+    # company_menu = await get_company_list(
+    #     message.answer,
+    #     tg_username,
+    #     tg_user_id,
+    #     EP_COMPANY_PAYER,
+    #     "company_name_payer",
+    #     "company_inn_payer",
+    # )
+    company_list = await new_get_company_list(tg_user_id, EP_COMPANY_PAYER)
+
+    print("Это company_list ", company_list)
+    if company_list:
+        for company in company_list:
+            print("Это айтемы", company)
+            company_text = MESSAGES["company"].format(
+                company["company_name_payer"],
+                company["company_inn_payer"]
+            )
+            await message.answer(
+                company_text,
+                reply_markup=get_company_menu(company["company_inn_payer"])
+            )
+
+    await message.answer(
+        "Нажмите кнопку для выбора или введите новый ИНН:",
+        # reply_markup=get_company_menu(company_menu)
     )
-    if company_menu:
-        await message.answer(
-            "Нажмите кнопку для выбора или введите новый ИНН:",
-            reply_markup=get_company_menu(company_menu)
-        )
 
 
 @router.message(
