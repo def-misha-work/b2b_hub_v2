@@ -15,7 +15,7 @@ from storage import (
 )
 from keyboards.main_menu import get_menu
 from keyboards.company_menu import (
-    get_company_menu,
+    # get_company_menu,
     get_company_inn_menu,
 )
 from keyboards.application_fields_menu import get_application_fields_menu
@@ -26,7 +26,7 @@ from utils import (
     get_apllications_list,
     get_company_by_inn,
     new_get_company_list,
-    get_company_list,
+    # get_company_list,
     extract_inn_from_update,
     get_answer_function,
     get_company_name_from_dadata,
