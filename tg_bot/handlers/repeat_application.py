@@ -14,7 +14,10 @@ from storage import (
     UserStorage,
 )
 from keyboards.main_menu import get_menu
-from keyboards.company_menu import get_company_menu
+from keyboards.company_menu import (
+    get_company_menu,
+    get_company_inn_menu,
+)
 from keyboards.application_fields_menu import get_application_fields_menu
 from keyboards.date_fields_menu import get_date_menu
 from requests import make_post_request
@@ -22,6 +25,7 @@ from utils import (
     send_message,
     get_apllications_list,
     get_company_by_inn,
+    new_get_company_list,
     get_company_list,
     extract_inn_from_update,
     get_answer_function,
@@ -125,9 +129,13 @@ async def new_repeat_application(message: Message, state: FSMContext):
     except Exception as e:
         logging.info(f"Ошибка при создании пользователя {tg_username}: {e}")
         logging.info(f"Вся инфа про пользователя: {message.from_user}")
+        error_text = (
+            f"Ошибка при создании пользователя {tg_username}: ",
+            f"{e}, вся инфа: {message.from_user}"
+        )
         await send_message(
             SERVICE_CHAT_ID,
-            f"Ошибка при создании пользователя {tg_username}: {e}, вся инфа: {message.from_user}"
+            error_text
         )
     # конец костыля
     application_storage.update_tg_id(tg_user_id)
@@ -219,6 +227,7 @@ async def get_new_target_data(update: types.CallbackQuery, state: FSMContext):
         reply_markup=get_date_menu()
     )
 
+
 # Обработка target_date step_4 (Кнопка)
 @router.callback_query(
     lambda c: c.data in ["today", "tomorrow", "day_after_tomorrow"]
@@ -273,21 +282,24 @@ async def invalid_values_target_date(
 @router.callback_query(lambda c: c.data == 'edit_payer')
 async def get_new_payer(update: types.CallbackQuery, state: FSMContext):
     logging.info("Редактирование плательщики начато")
+    tg_user_id = update.from_user.id
     await state.set_state(NewPayer.edit_payer)
     await update.message.answer("Ваши компании плательщики:")
-    company_menu = await get_company_list(
-        update.message.answer,
-        update.message.from_user.username,
-        update.from_user.id,
-        EP_COMPANY_PAYER,
-        "company_name_payer",
-        "company_inn_payer",
-    )
+    company_list = await new_get_company_list(tg_user_id, EP_COMPANY_PAYER)
+    if company_list:
+        for company in company_list:
+            company_text = MESSAGES["company"].format(
+                company["company_name_payer"],
+                company["company_inn_payer"]
+            )
+            await update.message.answer(
+                company_text,
+                reply_markup=get_company_inn_menu(company["company_inn_payer"])
+            )
     global COMPANY_LIST_ALL
-    COMPANY_LIST_ALL = company_menu
+    COMPANY_LIST_ALL = company_list
     await update.message.answer(
-        "Нажмите кнопку для выбора или введите новый ИНН:",
-        reply_markup=get_company_menu(company_menu)
+        "Нажмите кнопку для выбора или введите новый ИНН!",
     )
 
 
@@ -357,19 +369,25 @@ async def get_new_recipient(update: types.CallbackQuery, state: FSMContext):
     logging.info("Редактирование получателя начато")
     await state.set_state(NewRecipient.edit_recipient)
     await update.message.answer("Ваши компании получателя:")
-    company_menu = await get_company_list(
-        update.message.answer,
-        update.message.from_user.username,
-        update.from_user.id,
-        EP_COMPANY_RECIPIENT,
-        "company_name_recipient",
-        "company_inn_recipient",
-    )
+
+    tg_user_id = update.from_user.id
+    company_list = await new_get_company_list(tg_user_id, EP_COMPANY_RECIPIENT)
+    if company_list:
+        for company in company_list:
+            company_text = MESSAGES["company"].format(
+                company["company_name_recipient"],
+                company["company_inn_recipient"]
+            )
+            await update.message.answer(
+                company_text,
+                reply_markup=get_company_inn_menu(
+                    company["company_inn_recipient"]
+                )
+            )
     global COMPANY_LIST_ALL
-    COMPANY_LIST_ALL = company_menu
+    COMPANY_LIST_ALL = company_list
     await update.message.answer(
-        "Нажмите кнопку для выбора или введите новый ИНН:",
-        reply_markup=get_company_menu(company_menu)
+        "Нажмите кнопку для выбора или введите новый ИНН!"
     )
 
 
