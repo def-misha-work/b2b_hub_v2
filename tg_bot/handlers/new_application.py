@@ -8,7 +8,10 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
 from keyboards.main_menu import get_menu
-from keyboards.company_menu import get_company_menu
+from keyboards.company_menu import (
+    # get_company_menu,
+    get_company_inn_menu,
+)
 from keyboards.date_fields_menu import get_date_menu
 
 from requests import (
@@ -23,7 +26,8 @@ from storage import (
 )
 from utils import (
     send_message,
-    get_company_list,
+    # get_company_list,
+    new_get_company_list,
     extract_inn_from_update,
     get_answer_function,
     get_company_name_from_dadata,
@@ -93,26 +97,29 @@ async def start_new_application(message: Message, state: FSMContext):
                 f"Ошибка при создании пользователя {tg_username}: {e}"
             )
             logging.info(f"Вся инфа про пользователя: {message.from_user}")
-            await send_message(
-                SERVICE_CHAT_ID,
-                f"Ошибка при создании пользователя {tg_username}: {e}, вся инфа: {message.from_user}"
+            error_text = (
+                f"Ошибка при создании пользователя {tg_username}: {e}, "
+                f"вся инфа: {message.from_user}"
             )
+            await send_message(SERVICE_CHAT_ID, error_text)
     await state.set_state(NewApplication.step_1)
     logging.info(f"@{tg_username} начал создание новой заявки")
     await message.answer(MESSAGES["step1"])
-    company_menu = await get_company_list(
-        message.answer,
-        tg_username,
-        tg_user_id,
-        EP_COMPANY_PAYER,
-        "company_name_payer",
-        "company_inn_payer",
+
+    company_list = await new_get_company_list(tg_user_id, EP_COMPANY_PAYER)
+    if company_list:
+        for company in company_list:
+            company_text = MESSAGES["company"].format(
+                company["company_name_payer"],
+                company["company_inn_payer"]
+            )
+            await message.answer(
+                company_text,
+                reply_markup=get_company_inn_menu(company["company_inn_payer"])
+            )
+    await message.answer(
+        "Нажмите кнопку для выбора или введите новый ИНН!",
     )
-    if company_menu:
-        await message.answer(
-            "Нажмите кнопку для выбора или введите новый ИНН:",
-            reply_markup=get_company_menu(company_menu)
-        )
 
 
 @router.message(
@@ -131,7 +138,7 @@ async def process_inn_payer(
     inn_payer = await extract_inn_from_update(update)
     answer_func = await get_answer_function(update)
     tg_user_id = update.from_user.id
-    tg_username = update.from_user.username
+    # tg_username = update.from_user.username
 
     company_payer_storage.update_tg_id(tg_user_id)
     company_payer_storage.update_company_inn(inn_payer)
@@ -149,19 +156,24 @@ async def process_inn_payer(
     )
 
     await answer_func(MESSAGES["step2"])
-    company_meny = await get_company_list(
-        answer_func,
-        tg_username,
-        tg_user_id,
-        EP_COMPANY_RECIPIENT,
-        "company_name_recipient",
-        "company_inn_recipient",
+
+    company_list = await new_get_company_list(tg_user_id, EP_COMPANY_RECIPIENT)
+    if company_list:
+        for company in company_list:
+            company_text = MESSAGES["company"].format(
+                company["company_name_recipient"],
+                company["company_inn_recipient"]
+            )
+            await answer_func(
+                company_text,
+                reply_markup=get_company_inn_menu(
+                    company["company_inn_recipient"]
+                )
+            )
+
+    await answer_func(
+        "Нажмите кнопку для выбора или введите новый ИНН!",
     )
-    if company_meny:
-        await answer_func(
-            "Нажмите кнопку для выбора или введите новый ИНН:",
-            reply_markup=get_company_menu(company_meny)
-        )
     await state.set_state(NewApplication.step_2)
     logging.info("Успех шаг 1")
 
@@ -286,7 +298,12 @@ async def get_target_date(message: types.Message, state: FSMContext):
     await step_four(message, state, target_date, tg_user_id)
 
 
-async def step_four(message: types.Message, state: FSMContext, target_date, tg_user_id):
+async def step_four(
+    message: types.Message,
+    state: FSMContext,
+    target_date,
+    tg_user_id
+):
     """Основаня логика шага 4 создания заявки."""
     logging.info(f"target_date: {target_date}")
     data_dict = await create_data_dict(message, target_date, tg_user_id)

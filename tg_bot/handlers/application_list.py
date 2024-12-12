@@ -64,7 +64,8 @@ async def get_application_list(message: Message):
             logging.info(f"Вся инфа про пользователя: {message.from_user}")
             await send_message(
                 SERVICE_CHAT_ID,
-                f"Ошибка при создании пользователя {tg_username}: {e}, вся инфа: {message.from_user}"
+                f"Ошибка при создании пользователя {tg_username}: ",
+                f" {e}, вся инфа: {message.from_user}"
             )
 
     value = GET_PARAM_USER + str(tg_user_id)
@@ -108,6 +109,8 @@ async def get_application_list(message: Message):
         logging.info(f"Пользователь {tg_user_id} в меню")
     else:
         await message.answer("У вас нет активных заявок.")
-        logging.info(f"Пользователь {tg_user_id} получил список заявок (пустой)")
+        logging.info(
+            f"Пользователь {tg_user_id} получил список заявок (пустой)"
+        )
         await message.answer(MESSAGES["menu"], reply_markup=get_menu())
         logging.info(f"Пользователь {tg_user_id} в меню")
