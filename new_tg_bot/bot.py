@@ -7,8 +7,10 @@ from handlers import (
     different_types,
 )
 from constants import TELEGRAM_TOKEN
+from logging_config import setup_logging
 
-logging.basicConfig(level=logging.INFO)
+setup_logging("app.log")
+logger = logging.getLogger(__name__)
 
 
 async def main():
@@ -25,4 +27,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    logger.info("Приложение запущено")
     asyncio.run(main())
