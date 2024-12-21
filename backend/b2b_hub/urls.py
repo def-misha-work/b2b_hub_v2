@@ -12,6 +12,8 @@ from applications.views import (
     CompaniesPayerViewSet,
     CompaniesRecipientViewSet,
     ApplicationsViewSet,
+)
+from uploaded_documents.views import (
     UploadFileViewSet,
 )
 

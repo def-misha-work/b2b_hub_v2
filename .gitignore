@@ -167,3 +167,5 @@ static
 django_backup_hand_09102024.dump
 test.pdf
 staticfiles/
+django_app.log
+old_django_app.log
