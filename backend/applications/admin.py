@@ -52,7 +52,6 @@ from applications.utils import (
 # custom_admin_site = CustomAdminSite(name='custom_admin')
 
 
-
 class TelegamUsersAdmin(admin.ModelAdmin):
     list_display = (
         "tg_user_id",
