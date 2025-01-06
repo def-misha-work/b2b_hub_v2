@@ -45,6 +45,7 @@ from constants import (
     EP_COMPANY_RECIPIENT,
     EP_APPLICATION,
     ENDPONT_CREATE_USER,
+    CASH,
 )
 
 
@@ -160,7 +161,7 @@ async def process_inn_payer(
     company_list = await new_get_company_list(tg_user_id, EP_COMPANY_RECIPIENT)
     if company_list:
         for company in company_list:
-            if company["company_name_recipient"] == "Наличкин":
+            if company["company_name_recipient"] == CASH:
                 continue
             company_text = MESSAGES["company"].format(
                 company["company_name_recipient"],
@@ -173,7 +174,7 @@ async def process_inn_payer(
                 )
             )
     nalichkin_text = MESSAGES["company"].format(
-                "Наличкин",
+                CASH,
                 "777777777777"
             )
     await answer_func(
@@ -226,7 +227,7 @@ async def process_inn_recipient(
             answer_func
         )
     else:
-        company_name = "Наличкин"
+        company_name = CASH
 
     await answer_func(f"Название вашей компании: {company_name}")
     company_recipient_storage.update_company_name(company_name)
