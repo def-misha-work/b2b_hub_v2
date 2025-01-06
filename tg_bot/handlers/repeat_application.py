@@ -45,6 +45,7 @@ from constants import (
     MESSAGES_TO_MANAGER,
     MANAGER_CHAT_ID,
     ENDPONT_CREATE_USER,
+    CASH,
 )
 
 router = Router()
@@ -374,7 +375,7 @@ async def get_new_recipient(update: types.CallbackQuery, state: FSMContext):
     company_list = await new_get_company_list(tg_user_id, EP_COMPANY_RECIPIENT)
     if company_list:
         for company in company_list:
-            if company["company_name_recipient"] == "Наличкин":
+            if company["company_name_recipient"] == CASH:
                 continue
             company_text = MESSAGES["company"].format(
                 company["company_name_recipient"],
@@ -387,7 +388,7 @@ async def get_new_recipient(update: types.CallbackQuery, state: FSMContext):
                 )
             )
     nalichkin_text = MESSAGES["company"].format(
-                "Наличкин",
+                CASH,
                 "777777777777"
             )
     await update.message.answer(
@@ -444,24 +445,24 @@ async def process_inn_recipient(
             answer_func
         )
     else:
-        company_name = "Наличкин"
+        company_name = CASH
 
-        await answer_func(f"Название вашей компании: {company_name}")
-        company_recipient_storage.update_company_name(company_name)
-        await update_company_in_database(
-            inn_recipient,
-            answer_func,
-            EP_COMPANY_RECIPIENT,
-            company_recipient_storage.to_dict(),
-        )
-        await print_apllication(answer_func)
-        await state.set_state(None)
-        await answer_func(
-            "Отредактируйте или отправьте заявку",
-            reply_markup=get_application_fields_menu()
-        )
+    await answer_func(f"Название вашей компании: {company_name}")
+    company_recipient_storage.update_company_name(company_name)
+    await update_company_in_database(
+        inn_recipient,
+        answer_func,
+        EP_COMPANY_RECIPIENT,
+        company_recipient_storage.to_dict(),
+    )
+    await print_apllication(answer_func)
+    await state.set_state(None)
+    await answer_func(
+        "Отредактируйте или отправьте заявку",
+        reply_markup=get_application_fields_menu()
+    )
 
-
+    
 @router.message(F.text, NewRecipient.edit_recipient)
 async def invalid_values_inn_recipient(
     message: types.Message, state: FSMContext
