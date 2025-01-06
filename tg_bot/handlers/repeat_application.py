@@ -462,7 +462,7 @@ async def process_inn_recipient(
         reply_markup=get_application_fields_menu()
     )
 
-
+    
 @router.message(F.text, NewRecipient.edit_recipient)
 async def invalid_values_inn_recipient(
     message: types.Message, state: FSMContext
