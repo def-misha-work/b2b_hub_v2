@@ -160,6 +160,8 @@ async def process_inn_payer(
     company_list = await new_get_company_list(tg_user_id, EP_COMPANY_RECIPIENT)
     if company_list:
         for company in company_list:
+            if company["company_name_recipient"] == "Наличкин":
+                continue
             company_text = MESSAGES["company"].format(
                 company["company_name_recipient"],
                 company["company_inn_recipient"]
@@ -170,6 +172,16 @@ async def process_inn_payer(
                     company["company_inn_recipient"]
                 )
             )
+    nalichkin_text = MESSAGES["company"].format(
+                "Наличкин",
+                "777777777777"
+            )
+    await answer_func(
+        nalichkin_text,
+        reply_markup=get_company_inn_menu(
+            "777777777777"
+        )
+    )
 
     await answer_func(
         "Нажмите кнопку для выбора или введите новый ИНН!",
@@ -208,13 +220,17 @@ async def process_inn_recipient(
     company_recipient_storage.update_tg_id(tg_user_id)
     company_recipient_storage.update_company_inn(inn_recipient)
     await answer_func(f"Вы ввели ИНН получателя: {inn_recipient}")
-    company_name = await get_company_name_from_dadata(
-        inn_recipient,
-        answer_func
-    )
-    if company_name:
-        await answer_func(f"Название вашей компании: {company_name}")
-        company_recipient_storage.update_company_name(company_name)
+    if inn_recipient != "777777777777":
+        company_name = await get_company_name_from_dadata(
+            inn_recipient,
+            answer_func
+        )
+    else:
+        company_name = "Наличкин"
+
+    await answer_func(f"Название вашей компании: {company_name}")
+    company_recipient_storage.update_company_name(company_name)
+
     await update_company_in_database(
         inn_recipient,
         answer_func,
