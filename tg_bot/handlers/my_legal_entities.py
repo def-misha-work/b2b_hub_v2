@@ -67,7 +67,7 @@ async def answer_no1(message: Message):
     await message.answer("Выберите категорию:", reply_markup=get_legal_menu())
 
 
-@router.callback_query(lambda c: c.data == 'payer')
+@router.callback_query(lambda c: c.data == "recipient")
 async def process_inn_payer(update: types.CallbackQuery):
     await get_company_list(
         update.message.answer,
@@ -80,7 +80,7 @@ async def process_inn_payer(update: types.CallbackQuery):
     await update.message.answer(MESSAGES["menu"], reply_markup=get_menu())
 
 
-@router.callback_query(lambda c: c.data == 'recipient')
+@router.callback_query(lambda c: c.data == "payer")
 async def process_inn_recipient(update: types.CallbackQuery):
     await get_company_list(
         update.message.answer,

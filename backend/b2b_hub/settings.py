@@ -2,21 +2,33 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+from .log_handler import get_rotating_file_handler
+
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "")
-# SECRET_KEY = "django-insecure-zybf797((ht9!l8y9col2qspk6uw@q8(jan*dqu+y863c$d4#4"
 
 # DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 DEBUG = True
 
-ALLOWED_HOSTS = ["backend", "91.197.96.196", "192.168.0.20", "158.160.38.73", "localhost", "127.0.0.1", "[::1]"]
-# ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    "backend",
+    "91.197.96.196",
+    "192.168.0.20",
+    "158.160.38.73",
+    "localhost",
+    "127.0.0.1",
+    "[::1]"
+]
 
-# CSRF_TRUSTED_ORIGINS = ["http://192.168.0.20:8000", "http://backend", "http://*", "https://*"]
-CSRF_TRUSTED_ORIGINS = ["http://91.197.96.196", "http://127.0.0.1:8000", "http://192.168.0.20:8000", "http://158.160.38.73:8000"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://91.197.96.196",
+    "http://127.0.0.1:8000",
+    "http://192.168.0.20:8000",
+    "http://158.160.38.73:8000"
+]
 
 
 AUTH_USER_MODEL = "users.CustomUser"
@@ -33,6 +45,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_yasg",
     "django_filters",
+    "uploaded_documents",
 ]
 
 MIDDLEWARE = [
@@ -137,24 +150,36 @@ LOGGING = {
             "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s",
         }
     },
-    "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
+    "filters": {
+        "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}
+    },
     "handlers": {
         "console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "verbose",
-        }
+        },
+        "file": {  # Новый обработчик для записи в файл
+            "level": "INFO",
+            "class": "b2b_hub.log_handler.RotatingFileHandler",
+            # backend/b2b_hub/log_handler.py
+            "filename": "django_app.log",  # Имя файла для логов
+            "formatter": "verbose",
+        },
     },
-    "root": {"level": "INFO", "handlers": ["console"]},
+    "root": {
+        "level": "INFO",
+        "handlers": ["console", "file"]
+    },
     "loggers": {
         "django": {
-            "handlers": ["console"],
+            "handlers": ["console", "file"],
             "propagate": False,
             "level": "INFO",
         },
         "django.security.DisallowedHost": {
             "level": "ERROR",
-            "handlers": ["console"],
+            "handlers": ["console", "file"],
             "propagate": False,
         },
     },

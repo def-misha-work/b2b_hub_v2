@@ -11,7 +11,6 @@ URL_TG_SEND_MESSAGE = TG_DOMAIN + BOT + BOT_TOKEN + "/sendMessage"
 URL_SEND_FILE = TG_DOMAIN + BOT + BOT_TOKEN + "/sendDocument"
 VALID_STATUSES = ["Новая", "В работе", "Счёт в оплате", "Выполнена"]
 
-
 NEW_STATUS_MESSAGE = """
 B2b-hub: изменился статус вашей заявки.
 
@@ -30,3 +29,4 @@ UPDATE_DOC_MESSAGE = """
 B2b-hub: <b>ВНИМАНИЕ</b>, обновился документ по заявке номер: {}
 {}
 """
+REQUIRED_FIELDS = ["tg_user_id", "app_id", "file_body", "file_name", "message"]

@@ -45,6 +45,7 @@ from constants import (
     MESSAGES_TO_MANAGER,
     MANAGER_CHAT_ID,
     ENDPONT_CREATE_USER,
+    CASH,
 )
 
 router = Router()
@@ -368,12 +369,14 @@ async def invalid_values_inn_payer(message: types.Message, state: FSMContext):
 async def get_new_recipient(update: types.CallbackQuery, state: FSMContext):
     logging.info("Редактирование получателя начато")
     await state.set_state(NewRecipient.edit_recipient)
-    await update.message.answer("Ваши компании получателя:")
+    await update.message.answer("Ваши компании получатели:")
 
     tg_user_id = update.from_user.id
     company_list = await new_get_company_list(tg_user_id, EP_COMPANY_RECIPIENT)
     if company_list:
         for company in company_list:
+            if company["company_name_recipient"] == CASH:
+                continue
             company_text = MESSAGES["company"].format(
                 company["company_name_recipient"],
                 company["company_inn_recipient"]
@@ -384,6 +387,16 @@ async def get_new_recipient(update: types.CallbackQuery, state: FSMContext):
                     company["company_inn_recipient"]
                 )
             )
+    nalichkin_text = MESSAGES["company"].format(
+                CASH,
+                "777777777777"
+            )
+    await update.message.answer(
+        nalichkin_text,
+        reply_markup=get_company_inn_menu(
+            "777777777777"
+        )
+    )
     global COMPANY_LIST_ALL
     COMPANY_LIST_ALL = company_list
     await update.message.answer(
@@ -425,27 +438,31 @@ async def process_inn_recipient(
     else:
         await answer_func(f"Вы ввели ИНН получателя: {inn_recipient}")
         company_recipient_storage.update_company_inn(inn_recipient)
+
+    if inn_recipient != "777777777777":
         company_name = await get_company_name_from_dadata(
             inn_recipient,
             answer_func
         )
-        if company_name:
-            await answer_func(f"Название вашей компании: {company_name}")
-            company_recipient_storage.update_company_name(company_name)
-        await update_company_in_database(
-            inn_recipient,
-            answer_func,
-            EP_COMPANY_RECIPIENT,
-            company_recipient_storage.to_dict(),
-        )
-        await print_apllication(answer_func)
-        await state.set_state(None)
-        await answer_func(
-            "Отредактируйте или отправьте заявку",
-            reply_markup=get_application_fields_menu()
-        )
+    else:
+        company_name = CASH
 
+    await answer_func(f"Название вашей компании: {company_name}")
+    company_recipient_storage.update_company_name(company_name)
+    await update_company_in_database(
+        inn_recipient,
+        answer_func,
+        EP_COMPANY_RECIPIENT,
+        company_recipient_storage.to_dict(),
+    )
+    await print_apllication(answer_func)
+    await state.set_state(None)
+    await answer_func(
+        "Отредактируйте или отправьте заявку",
+        reply_markup=get_application_fields_menu()
+    )
 
+    
 @router.message(F.text, NewRecipient.edit_recipient)
 async def invalid_values_inn_recipient(
     message: types.Message, state: FSMContext
