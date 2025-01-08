@@ -3,8 +3,8 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
-from aiogram.fsm.context import FSMContext
 
+from aiogram.fsm.context import FSMContext
 from keyboards.main_menu import get_menu
 from constants import (
     START_MESSAGE,
