@@ -2,6 +2,7 @@
 
 
 class BotScheme(StatesGroup):
+    no_user_name = State()
     main_menu = State()
     # create_new_order = State() кажется не нужен
     create_inn_payer = State()
