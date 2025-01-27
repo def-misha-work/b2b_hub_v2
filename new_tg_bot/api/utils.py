@@ -8,7 +8,7 @@ from api.models import (
 )
 
 
-class ITelegramUserRepository(ABC):
+class ApiRepository(ABC):
     @abstractmethod
     def get_all_users(self) -> List[TelegramUser]:
         pass
@@ -22,7 +22,7 @@ class ITelegramUserRepository(ABC):
         pass
 
 
-class ApiTelegramUserRepository(ITelegramUserRepository):
+class ApiRepository(ApiRepository):
     def __init__(self, base_url: str):
         self.base_url = base_url
 
