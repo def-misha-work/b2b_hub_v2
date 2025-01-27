@@ -72,6 +72,10 @@ class NewRecipient(StatesGroup):
     edit_recipient = State()
 
 
+class NewComment(StatesGroup):
+    edit_comment = State()
+
+
 async def record_storage(apllication, payer, recipient):
     logging.info("Обновление all storage")
     application_storage.update_application_id(apllication["id"])
@@ -85,6 +89,7 @@ async def record_storage(apllication, payer, recipient):
     company_recipient_storage.update_company_inn(
         recipient["company_inn_recipient"]
     )
+    application_storage.update_comment(apllication["comment"])
 
 
 async def print_apllication(message):
@@ -95,7 +100,8 @@ async def print_apllication(message):
             company_payer_storage.company_name,
             company_payer_storage.company_inn,
             company_recipient_storage.company_name,
-            company_recipient_storage.company_inn
+            company_recipient_storage.company_inn,
+            application_storage.comment,
         )
     await message(
         f"Заявка: {user_message}"
@@ -171,6 +177,29 @@ async def new_repeat_application(message: Message, state: FSMContext):
     else:
         await message.answer("У вас еще нет заявок, создайте новую!")
         await message.answer(MESSAGES["menu"], reply_markup=get_menu())
+
+
+@router.callback_query(lambda c: c.data == 'comment')
+async def get_new_comment(update: types.CallbackQuery, state: FSMContext):
+    logging.info("Редактирование комментария")
+    await state.set_state(NewComment.edit_comment)
+    await update.message.answer("Введите новый комментарии:")
+
+
+@router.message(
+    lambda message: message.text,
+    NewComment.edit_comment
+)
+async def edit_comment(message: types.Message, state: FSMContext):
+    logging.info("Комментарии отредактирован")
+    application_storage.update_comment(message.text)
+    await message.answer(f"Вы ввели комментарии: {message.text}")
+    await print_apllication(message.answer)
+    await state.set_state(None)
+    await message.answer(
+        "Отредактируйте или отправьте заявку",
+        reply_markup=get_application_fields_menu()
+    )
 
 
 @router.callback_query(lambda c: c.data == 'edit_cost')
@@ -506,7 +535,8 @@ async def create_new_apllication(update: types.CallbackQuery):
             company_payer_storage.company_name,
             company_payer_storage.company_inn,
             company_recipient_storage.company_name,
-            company_recipient_storage.company_inn
+            company_recipient_storage.company_inn,
+            application_storage.comment,
         )
         message_manager = MESSAGES_TO_MANAGER["application_created"].format(
             update.from_user.first_name,

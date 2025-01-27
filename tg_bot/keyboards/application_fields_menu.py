@@ -8,6 +8,7 @@ def get_application_fields_menu() -> InlineKeyboardMarkup:
     kb.button(text="Дату выполнения", callback_data="edit_target_date")
     kb.button(text="Плательщика", callback_data="edit_payer")
     kb.button(text="Получателя", callback_data="edit_recipient")
+    kb.button(text="Комментарии", callback_data="comment")
     kb.button(text="Отправить заявку", callback_data="send_apllication")
     kb.adjust(2)
     return kb.as_markup()

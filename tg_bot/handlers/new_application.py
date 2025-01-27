@@ -13,7 +13,7 @@ from keyboards.company_menu import (
     get_company_inn_menu,
 )
 from keyboards.date_fields_menu import get_date_menu
-
+from keyboards.send_app import send_app
 from requests import (
     make_post_request,
     make_get_request,
@@ -46,6 +46,7 @@ from constants import (
     EP_APPLICATION,
     ENDPONT_CREATE_USER,
     CASH,
+    STEP_5_COMMENT,
 )
 
 
@@ -60,6 +61,7 @@ class NewApplication(StatesGroup):
     step_2 = State()
     step_3 = State()
     step_4 = State()
+    step_5 = State()
 
 
 @router.message(StateFilter(None), F.text.lower() == "новая заявка")
@@ -297,9 +299,10 @@ async def get_target_date_buttons(
     state: FSMContext
 ):
     target_date = await get_date(update.data)
-    tg_user_id = update.from_user.id
-    logging.info(f"Это TG_ID: {tg_user_id}")
-    await step_four(update.message, state, target_date, tg_user_id)
+    application_storage.update_target_date(target_date)
+    await update.message.answer(f"Вы ввели дату: {target_date}")
+    await update.message.answer(STEP_5_COMMENT, reply_markup=send_app())
+    await state.set_state(NewApplication.step_5)
 
 
 # Обработка target_date step_4 (Сообщение)
@@ -310,20 +313,61 @@ async def get_target_date_buttons(
 async def get_target_date(message: types.Message, state: FSMContext):
     """Обработка сообщения с датой в формате 20.10.25."""
     target_date = message.text
+    application_storage.update_target_date(target_date)
+    await message.answer(f"Вы ввели дату: {target_date}")
+    await message.answer(STEP_5_COMMENT, reply_markup=send_app())
+    await state.set_state(NewApplication.step_5)
+
+
+@router.message(F.text, NewApplication.step_4)
+async def invalid_values_target_date(
+    message: types.Message,
+    state: FSMContext
+):
+    """Валидация даты."""
+    logging.info("Ошибка на шаге 4")
+    await message.answer(
+        "Введите дату в формате: 20.10.25, не ранее текущего дня."
+    )
+    await message.answer(MESSAGES["step4"])
+    await state.set_state(NewApplication.step_4)
+
+
+# Обработка step_5 (Сообщение)
+@router.message(
+    lambda message: F.text,
+    NewApplication.step_5
+)
+async def step_five_message(
+    message: types.Message,
+    state: FSMContext
+):
+    application_storage.update_comment(message.text)
     tg_user_id = message.from_user.id
-    logging.info(f"Это TG_ID: {tg_user_id}")
-    await step_four(message, state, target_date, tg_user_id)
+    await finish_create_application(
+        message, state, tg_user_id
+    )
 
 
-async def step_four(
+# Обработка step_5 (Кнопка)
+@router.callback_query(StateFilter(NewApplication.step_5))
+async def step_five_calback(
+    update: types.CallbackQuery,
+    state: FSMContext
+):
+    tg_user_id = update.from_user.id
+    await finish_create_application(
+        update.message, state, tg_user_id
+    )
+
+
+async def finish_create_application(
     message: types.Message,
     state: FSMContext,
-    target_date,
     tg_user_id
 ):
-    """Основаня логика шага 4 создания заявки."""
-    logging.info(f"target_date: {target_date}")
-    data_dict = await create_data_dict(message, target_date, tg_user_id)
+    """Основная логика шага 4 создания заявки."""
+    data_dict = await create_data_dict(message, tg_user_id)
     # сохраняем в бд, получаем id заявки
     application_id = await save_in_db(data_dict, message)
     if not application_id:
@@ -341,10 +385,11 @@ async def step_four(
     logging.info("Успех шаг 4")
 
 
-async def create_data_dict(message, target_date, tg_user_id):
+async def create_data_dict(message, tg_user_id):
     application_storage.update_tg_id(tg_user_id)
-    application_storage.update_target_date(target_date)
     data_dict = application_storage.to_dict()
+    # ...
+    logging.info(f"data_dict: {data_dict}")
     data_dict["inn_payer"] = company_payer_storage.company_inn
     data_dict["inn_recipient"] = company_recipient_storage.company_inn
     return data_dict
@@ -375,7 +420,8 @@ async def send_notifications(application_id, message, state):
         company_payer_storage.company_name,
         company_payer_storage.company_inn,
         company_recipient_storage.company_name,
-        company_recipient_storage.company_inn
+        company_recipient_storage.company_inn,
+        application_storage.comment
     )
     user_data = await state.get_data()
     first_name = user_data.get('user_first_name')
@@ -391,17 +437,3 @@ async def send_notifications(application_id, message, state):
     await send_message(SERVICE_CHAT_ID, message_manager)
     await send_message(MANAGER_CHAT_ID, message_manager)
     await message.answer(message_user)
-
-
-@router.message(F.text, NewApplication.step_4)
-async def invalid_values_target_date(
-    message: types.Message,
-    state: FSMContext
-):
-    """Валидация даты."""
-    await message.answer(
-        "Введите дату в формате: 20.10.25, не ранее текущего дня."
-    )
-    await message.answer(MESSAGES["step4"])
-    await state.set_state(NewApplication.step_4)
-    logging.info("Ошибка на шаге 4")
