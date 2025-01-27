@@ -229,6 +229,12 @@ class Applications(TimestampMixin, models.Model):
         choices=STATUS_CHOICES,
         default="Новая"
     )
+    comment = models.TextField(
+        blank=True,
+        null=True,
+        default="",
+        verbose_name="Комментарии к заявке",
+    )
 
     class Meta:
         verbose_name = "Заявка"
