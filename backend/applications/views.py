@@ -3,6 +3,7 @@ from rest_framework import viewsets, filters, status
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
 
+from applications.filters import ApplicationsFilter
 from applications.serializers import (
     TelegamUsersSerializer,
     CompaniesPayerSerializer,
@@ -126,6 +127,9 @@ class ApplicationsViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter
     ]
     filterset_fields = ["tg_user__tg_user_id"]
+    filterset_class = ApplicationsFilter
+    ordering_fields = '__all__'
+    ordering = ['created_at']
 
     def get_serializer_class(self):
         if self.action in ["list", "retrieve"]:

@@ -22,12 +22,14 @@ class ApplicationStorage():
         tg_id=None,
         application_cost=None,
         target_date=None,
-        application_id=None
+        application_id=None,
+        comment=None,
     ):
         self.tg_id = tg_id
         self.application_cost = application_cost
         self.target_date = target_date
         self.application_id = application_id
+        self.comment = comment
 
     def update_tg_id(self, new_tg_id):
         self.tg_id = new_tg_id
@@ -41,11 +43,15 @@ class ApplicationStorage():
     def update_application_id(self, new_application_id):
         self.application_id = new_application_id
 
+    def update_comment(self, new_comment):
+        self.comment = new_comment
+
     def to_dict(self):
         return {
             "tg_user_id": self.tg_id,
             "cost": self.application_cost,
             "target_date": self.target_date,
+            "comment": self.comment,
         }
 
     def clear_data(self):
@@ -53,6 +59,7 @@ class ApplicationStorage():
         self.application_cost = None
         self.target_date = None
         self.application_id = None
+        self.comment = None
 
 
 class CompanyPayerStorage():

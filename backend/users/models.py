@@ -1,13 +1,14 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
-from django.utils import timezone
+# from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
 class CustomUserManager(BaseUserManager):
     """
-    Кастомный менеджер для модели пользователя, использующий email вместо username.
+    Кастомный менеджер для модели пользователя,
+    использующий email вместо username.
     """
     def get_by_natural_key(self, email):
         return self.get(email=email)
@@ -26,7 +27,8 @@ class CustomUserManager(BaseUserManager):
 
     def create_superuser(self, email, password, **extra_fields):
         """
-        Создание и сохранение суперпользователя с предоставленным email и паролем.
+        Создание и сохранение суперпользователя
+        с предоставленным email и паролем.
         """
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
