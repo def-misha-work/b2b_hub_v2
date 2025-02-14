@@ -24,13 +24,22 @@ async def cmd_start(message: Message, state: FSMContext):
     logger.info("Пользователь нажал на старт")
     await state.set_state(None)
 
-    user_name = message.from_user.first_name
-    logger.info(f"Это ответ ТГ: {message.from_user}")
-    if user_name:
-        await message.answer(START_MESSAGE.format(user_name))
+    # Поля для проверки
+    logger.info(f"Это все что в message.from_user: {message.from_user}")
+
+    user_id = message.from_user.id
+    first_name = message.from_user.first_name
+    username = message.from_user.username
+    logger.info(f"Имя пользователя: {user_id}")
+    logger.info(f"Имя пользователя: {first_name}")
+    logger.info(f"Имя пользователя: {username}")
+    # TODO сделать проверку в базе что
+    # пользователь есть или создать его если нет.
+    if first_name:
+        await message.answer(START_MESSAGE.format(first_name))
         await message.answer("Вы в меню!", reply_markup=get_menu())
 
-    if not user_name:
+    if not first_name:
         await message.answer(NO_USER_NAME)
         await state.set_state(BotScheme.no_user_name)
 
