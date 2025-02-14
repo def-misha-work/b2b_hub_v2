@@ -10,6 +10,7 @@ from keyboards.main_menu import get_menu
 from constants import (
     START_MESSAGE,
     NO_USER_NAME,
+    MAIN_MENU_MESSAGE,
 )
 
 router = Router()
@@ -21,23 +22,28 @@ logger = logging.getLogger(__name__)
 async def cmd_start(message: Message, state: FSMContext):
     """Запускает бота по команде /start. Выводит меню.
     Отправляет в БД запрос на создание юзера."""
-    logger.info("Пользователь нажал на старт")
-    await state.set_state(None)
-
-    # Поля для проверки
-    logger.info(f"Это все что в message.from_user: {message.from_user}")
+    # Сбрасываем прошлые состояния, данные
+    await state.finish()
+    await state.reset_data()
 
     user_id = message.from_user.id
     first_name = message.from_user.first_name
     username = message.from_user.username
-    logger.info(f"Имя пользователя: {user_id}")
+    logger.info(f"ID пользователя: {user_id}")
     logger.info(f"Имя пользователя: {first_name}")
-    logger.info(f"Имя пользователя: {username}")
+    logger.info(f"Ник пользователя: {username}")
+    # Сохраняем в словарь state данные пользователя
+    await state.update_data(
+        user_user_id=user_id,
+        user_username=username,
+        user_first_name=first_name,
+    )
     # TODO сделать проверку в базе что
     # пользователь есть или создать его если нет.
     if first_name:
         await message.answer(START_MESSAGE.format(first_name))
-        await message.answer("Вы в меню!", reply_markup=get_menu())
+        await state.set_state(BotScheme.main_menu)
+        await message.answer(MAIN_MENU_MESSAGE, reply_markup=get_menu())
 
     if not first_name:
         await message.answer(NO_USER_NAME)
