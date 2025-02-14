@@ -11,10 +11,12 @@ from constants import (
     START_MESSAGE,
     NO_USER_NAME,
     MAIN_MENU_MESSAGE,
+    DOMANE_NAME,
 )
+from api.tg_users_api import ApiTelegramUserRepository
+
 
 router = Router()
-
 logger = logging.getLogger(__name__)
 
 
@@ -23,8 +25,7 @@ async def cmd_start(message: Message, state: FSMContext):
     """Запускает бота по команде /start. Выводит меню.
     Отправляет в БД запрос на создание юзера."""
     # Сбрасываем прошлые состояния, данные
-    await state.finish()
-    await state.reset_data()
+    await state.clear()
 
     user_id = message.from_user.id
     first_name = message.from_user.first_name
@@ -38,8 +39,14 @@ async def cmd_start(message: Message, state: FSMContext):
         user_username=username,
         user_first_name=first_name,
     )
-    # TODO сделать проверку в базе что
-    # пользователь есть или создать его если нет.
+
+    # проверяем в базе!
+    tg_user_in_db = ApiTelegramUserRepository(DOMANE_NAME)
+    tg_user_in_db.get_user_by_id("user_id")
+    # TODO тут както придумать проверку на поля имя и юзернеим
+    if tg_user_in_db is not None:
+        await message.answer(f'С возвращением {first_name}')
+
     if first_name:
         await message.answer(START_MESSAGE.format(first_name))
         await state.set_state(BotScheme.main_menu)

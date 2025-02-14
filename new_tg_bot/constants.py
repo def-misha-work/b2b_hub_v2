@@ -6,6 +6,11 @@ load_dotenv()
 
 # Подключение бота
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+DOMANE_NAME = os.getenv("DOMANE_NAME")
+
+# Авторизация в беке
+BASIC_USER_LOGIN = os.getenv("BASIC_USER_LOGIN")
+BASIC_USER_PASSWORD = os.getenv("BASIC_USER_PASSWORD")
 
 
 # Собщения

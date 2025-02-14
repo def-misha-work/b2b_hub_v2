@@ -4,7 +4,7 @@ from typing import Optional
 
 @dataclass
 class TelegramUser:
-    tg_username: str
-    tg_user_id: Optional[str] = None
-    name: str
-    lastname: Optional[str] = None
+    tg_user_id: str
+    tg_username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
